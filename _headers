@@ -1,0 +1,11 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "ALLOWALL"
+    Access-Control-Allow-Origin = "*"
+    Content-Security-Policy = "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://calendar.google.com https://outlook.live.com"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

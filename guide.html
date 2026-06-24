@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>miPlanr Poll Hub — Complete Setup Guide</title>
+<style>
+  :root {
+    --navy:      #0A1A4D;
+    --navy-mid:  #0B1B3D;
+    --blue:      #0072FF;
+    --blue-mid:  #0096FF;
+    --cyan:      #00C6FF;
+    --pink:      #EC2AA7;
+    --teal:      #00BFA5;
+    --grey:      #A0AEC0;
+    --white:     #ffffff;
+    --off:       #F4F7FC;
+    --border:    #E2E8F4;
+    --text:      #0A1A4D;
+    --muted:     #6B7A99;
+    --radius:    12px;
+    --radius-sm: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--off);
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    background: var(--navy);
+    padding: 0.85rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--blue);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 12px; }
+  .brand-mark {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    color: white;
+    font-weight: 900;
+    font-style: italic;
+  }
+  .brand-name { font-size: 1.1rem; font-weight: 700; color: white; }
+  .brand-name span { color: var(--cyan); }
+  .brand-sub { font-size: 0.7rem; color: var(--grey); letter-spacing: 0.06em; text-transform: uppercase; }
+  .topbar-tag { font-size: 0.7rem; color: var(--grey); letter-spacing: 0.07em; text-transform: uppercase; }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, var(--navy) 0%, #102060 100%);
+    padding: 3rem 2rem 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    left: 50%; top: -60px;
+    transform: translateX(-50%);
+    width: 500px; height: 300px;
+    background: radial-gradient(ellipse, rgba(0,198,255,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    display: inline-block;
+    background: rgba(0,191,165,0.18);
+    border: 1px solid rgba(0,191,165,0.35);
+    color: var(--teal);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 1rem;
+  }
+  .hero h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: white;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+  }
+  .hero h1 span { color: var(--cyan); }
+  .hero p {
+    font-size: 1rem;
+    color: rgba(255,255,255,0.65);
+    max-width: 580px;
+    margin: 0 auto 1.5rem;
+  }
+  .hero-pills {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+  }
+  .pill {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.8);
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  /* LAYOUT */
+  .page { max-width: 860px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+  /* TOC */
+  .toc {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 1.75rem;
+    margin: 2rem 0;
+  }
+  .toc h2 { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 2rem;
+  }
+  .toc a {
+    font-size: 0.88rem;
+    color: var(--blue);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+  }
+  .toc a:hover { color: var(--navy); }
+  .toc-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--off);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  /* SECTION */
+  .section {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+  .section-header {
+    padding: 1.25rem 1.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .section-header:hover { background: var(--off); }
+  .sec-num {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .sec-title-wrap { flex: 1; }
+  .sec-eyebrow { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-bottom: 1px; }
+  .sec-title { font-size: 1.05rem; font-weight: 700; color: var(--navy); }
+  .sec-chevron { color: var(--grey); font-size: 1.1rem; transition: transform 0.2s; }
+  .section.open .sec-chevron { transform: rotate(180deg); }
+  .section-body { padding: 0 1.75rem 1.75rem; display: none; }
+  .section.open .section-body { display: block; }
+
+  /* STEPS */
+  .step {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+  .step:first-child { border-top: none; padding-top: 1.5rem; }
+  .step-num {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--navy);
+    color: var(--cyan);
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-body { flex: 1; }
+  .step-title { font-size: 0.97rem; font-weight: 700; color: var(--navy); margin-bottom: 0.35rem; }
+  .step-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.65; }
+  .step-desc strong { color: var(--text); }
+
+  /* CODE BLOCK */
+  .code {
+    background: var(--navy);
+    color: var(--cyan);
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.82rem;
+    padding: 0.85rem 1.1rem;
+    border-radius: var(--radius-sm);
+    margin-top: 0.75rem;
+    overflow-x: auto;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .code .cm { color: var(--grey); }
+  .code .cs { color: #f9a825; }
+  .code .ck { color: #80cbc4; }
+
+  /* TIP / WARNING / INFO BOXES */
+  .tip, .warn, .info {
+    border-radius: var(--radius-sm);
+    padding: 0.85rem 1.1rem;
+    margin-top: 0.85rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .tip { background: #E6FAF7; border-left: 3px solid var(--teal); color: #006655; }
+  .warn { background: #FFF4E6; border-left: 3px solid #F6A623; color: #7A4F00; }
+  .info { background: #EEF5FF; border-left: 3px solid var(--blue); color: #003D99; }
+  .tip-icon, .warn-icon, .info-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+  /* URL EXAMPLE */
+  .url-box {
+    background: var(--off);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1rem;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.78rem;
+    color: var(--navy);
+    margin-top: 0.75rem;
+    word-break: break-all;
+    line-height: 1.7;
+  }
+  .url-box .param { color: var(--blue); }
+  .url-box .val { color: var(--pink); }
+
+  /* PLATFORM BADGES */
+  .plat-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 0.85rem;
+  }
+  .plat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--muted);
+  }
+  .plat-badge.active { border-color: var(--teal); background: #E6FAF7; color: #006655; }
+
+  /* INLINE TAG */
+  .tag {
+    display: inline-block;
+    background: #EEF5FF;
+    color: var(--blue);
+    font-size: 0.73rem;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,114,255,0.2);
+    font-family: 'SF Mono', monospace;
+  }
+  .tag-pink { background: #FEE8F5; color: var(--pink); border-color: rgba(236,42,167,0.2); }
+  .tag-teal { background: #E6FAF7; color: var(--teal); border-color: rgba(0,191,165,0.25); }
+
+  /* DIVIDER */
+  hr { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+
+  /* TWO-COL */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+  .mini-card {
+    background: var(--off);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+  }
+  .mini-card h4 { font-size: 0.85rem; font-weight: 700; color: var(--navy); margin-bottom: 0.4rem; }
+  .mini-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.55; }
+
+  /* FLOW DIAGRAM */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 1.25rem 0;
+    flex-wrap: wrap;
+  }
+  .flow-box {
+    background: var(--navy);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .flow-arrow {
+    color: var(--grey);
+    font-size: 1.1rem;
+    padding: 0 8px;
+    flex-shrink: 0;
+  }
+  .flow-box.accent { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+  .flow-box.teal { background: var(--teal); }
+  .flow-box.pink { background: var(--pink); }
+
+  /* FOOTER */
+  footer {
+    background: var(--navy);
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.78rem;
+  }
+  footer strong { color: var(--cyan); }
+
+  @media (max-width: 600px) {
+    .toc-grid { grid-template-columns: 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 1.5rem; }
+    .page { padding: 0 1rem 2rem; }
+    .flow { gap: 4px; }
+    .flow-box { font-size: 0.68rem; padding: 6px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <div class="brand-mark">P</div>
+    <div>
+      <div class="brand-name">mi<span>Planr</span> <span style="color:var(--grey);font-weight:400">/ Poll Hub</span></div>
+      <div class="brand-sub">Setup &amp; Integration Guide</div>
+    </div>
+  </div>
+  <span class="topbar-tag">For Developers &amp; Admins</span>
+</div>
+
+<div class="hero">
+  <div class="hero-eyebrow">Complete setup guide</div>
+  <h1>miPlanr Poll Hub<br><span>From zero to live in 30 minutes</span></h1>
+  <p>Deploy the poll page, connect the WhatsApp parser, integrate with Google Calendar, Outlook, and all 8 platforms — step by step, no jargon.</p>
+  <div class="hero-pills">
+    <span class="pill">🚀 Netlify deploy</span>
+    <span class="pill">📅 Google Calendar</span>
+    <span class="pill">📧 Outlook</span>
+    <span class="pill">⛪ ChurchSuite</span>
+    <span class="pill">🏫 iSAMS</span>
+    <span class="pill">📚 Edulink</span>
+    <span class="pill">🎓 Google Classroom</span>
+    <span class="pill">☁️ Salesforce</span>
+    <span class="pill">🔶 HubSpot</span>
+    <span class="pill">👥 Teamo</span>
+    <span class="pill">⚽ SportsEngine</span>
+    <span class="pill">💬 WhatsApp parser</span>
+    <span class="pill">🤖 miPlanr 2.0 chat</span>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- TOC -->
+  <div class="toc">
+    <h2>Contents — click to jump</h2>
+    <div class="toc-grid">
+      <a href="#s1"><div class="toc-num">1</div>What you're building</a>
+      <a href="#s2"><div class="toc-num">2</div>Prerequisites &amp; accounts needed</a>
+      <a href="#s3"><div class="toc-num">3</div>Deploy poll page to Netlify</a>
+      <a href="#s4"><div class="toc-num">4</div>Create &amp; share a poll</a>
+      <a href="#s5"><div class="toc-num">5</div>Google Calendar integration</a>
+      <a href="#s6"><div class="toc-num">6</div>Outlook / Microsoft 365 integration</a>
+      <a href="#s7"><div class="toc-num">7</div>WhatsApp → miPlanr parser</a>
+      <a href="#s8"><div class="toc-num">8</div>ChurchSuite sync</a>
+      <a href="#s9"><div class="toc-num">9</div>iSAMS sync</a>
+      <a href="#s10"><div class="toc-num">10</div>Edulink sync</a>
+      <a href="#s11"><div class="toc-num">11</div>Google Classroom sync</a>
+      <a href="#s12"><div class="toc-num">12</div>Salesforce sync</a>
+      <a href="#s13"><div class="toc-num">13</div>HubSpot sync</a>
+      <a href="#s14"><div class="toc-num">14</div>Teamo sync</a>
+      <a href="#s15"><div class="toc-num">15</div>SportsEngine sync</a>
+      <a href="#s16"><div class="toc-num">16</div>Connect to miPlanr 2.0 chat</a>
+      <a href="#s17"><div class="toc-num">17</div>Troubleshooting</a>
+    </div>
+  </div>
+
+  <!-- S1: What you're building -->
+  <div class="section open" id="s1">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">1</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Overview</div>
+        <div class="sec-title">What you're building</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="flow">
+        <div class="flow-box">You create poll<br>in miPlanr</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box accent">Share link via<br>WhatsApp / email</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box">People vote on<br>any device</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box teal">miPlanr books<br>the event</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box pink">All platforms<br>synced ✓</div>
+      </div>
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1rem;">Three components work together:</p>
+      <div class="two-col">
+        <div class="mini-card">
+          <h4>📄 index.html — Poll page</h4>
+          <p>A beautiful standalone page hosted on Netlify. Each poll is a unique URL with your question and options as parameters. No database needed for MVP.</p>
+        </div>
+        <div class="mini-card">
+          <h4>⚡ parse-poll-result.js — AI parser</h4>
+          <p>A Netlify serverless function powered by Claude. POST any WhatsApp text to it and receive a structured calendar event JSON ready to push to any platform.</p>
+        </div>
+        <div class="mini-card">
+          <h4>📅 Calendar sync</h4>
+          <p>Google Calendar and Outlook via deep-link URLs (instant, no auth). All 8 platforms via API calls using your stored credentials.</p>
+        </div>
+        <div class="mini-card">
+          <h4>🤖 miPlanr 2.0 chat</h4>
+          <p>The poll result and winning date feeds back into miPlanr's AI life coach, which can add it to your Life Plan and trigger follow-up actions.</p>
+        </div>
+      </div>
+      <div class="tip"><span class="tip-icon">💡</span><span><strong>WhatsApp limitation:</strong> WhatsApp has no public API for poll results. The parser solves this by letting you paste the winning result as text — Claude extracts the structured event automatically. For fully automatic sync, use the native miPlanr poll instead.</span></div>
+    </div>
+  </div>
+
+  <!-- S2: Prerequisites -->
+  <div class="section" id="s2">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">2</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Before you start</div>
+        <div class="sec-title">Accounts and tools you'll need</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-body">
+          <div class="step-title">GitHub account (free)</div>
+          <div class="step-desc">Go to <strong>github.com</strong> and create a free account if you don't have one. You'll store the poll files here so Netlify can deploy them.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-body">
+          <div class="step-title">Netlify account (free)</div>
+          <div class="step-desc">Go to <strong>netlify.com</strong> and sign up free. Connect with your GitHub account when prompted — this allows one-click deploys.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-body">
+          <div class="step-title">Anthropic API key</div>
+          <div class="step-desc">Go to <strong>console.anthropic.com</strong> → API Keys → Create key. Copy it and keep it safe — you'll add this to Netlify's environment variables. <strong>Never put this in your HTML or push it to GitHub.</strong></div>
+          <div class="tip"><span class="tip-icon">💡</span><span>If you already have an Anthropic key for miPlanr, you can reuse the same one.</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✓</div>
+        <div class="step-body">
+          <div class="step-title">The miPlanr Poll zip file</div>
+          <div class="step-desc">Download the <strong>miplanr-poll.zip</strong> file (provided separately). Unzip it — you'll see: <span class="tag">index.html</span>, <span class="tag">netlify.toml</span>, <span class="tag">_headers</span>, and <span class="tag">netlify/functions/parse-poll-result.js</span>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S3: Deploy -->
+  <div class="section" id="s3">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">3</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">5-minute setup</div>
+        <div class="sec-title">Deploy the poll page to Netlify</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Create a new GitHub repository</div>
+          <div class="step-desc">Go to <strong>github.com/new</strong>. Name it <strong>miplanr-poll</strong>. Leave it public. Click <strong>Create repository</strong>. Then upload all the files from your unzipped folder using the <strong>Upload files</strong> button. Commit directly to main.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Connect to Netlify</div>
+          <div class="step-desc">Go to <strong>app.netlify.com</strong> → <strong>Add new site</strong> → <strong>Import an existing project</strong> → <strong>GitHub</strong>. Authorise Netlify to access your GitHub. Select the <strong>miplanr-poll</strong> repository.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Configure build settings</div>
+          <div class="step-desc">Netlify will auto-detect settings from <span class="tag">netlify.toml</span>. Confirm: <strong>Publish directory:</strong> <span class="tag">.</span> and <strong>Functions directory:</strong> <span class="tag">netlify/functions</span>. Click <strong>Deploy site</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Add your Anthropic API key</div>
+          <div class="step-desc">In Netlify: go to your site → <strong>Site configuration</strong> → <strong>Environment variables</strong> → <strong>Add a variable</strong>. Set key: <span class="tag">ANTHROPIC_API_KEY</span>. Paste your Claude API key as the value. Save. Then go to <strong>Deploys</strong> → <strong>Trigger deploy</strong> → <strong>Deploy site</strong> to apply the env var.</div>
+          <div class="warn"><span class="warn-icon">⚠️</span><span>Never add the API key to your HTML or commit it to GitHub. Environment variables are encrypted by Netlify and never exposed publicly.</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">Your poll page is live!</div>
+          <div class="step-desc">Netlify gives you a URL like <strong>amazing-poll-123.netlify.app</strong>. You can customise this under <strong>Domain settings</strong> → <strong>Change site name</strong> to something like <strong>miplanr-poll.netlify.app</strong>. Visit it — you should see the miPlanr poll page.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4: Create a poll -->
+  <div class="section" id="s4">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">4</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Day-to-day use</div>
+        <div class="sec-title">How to create and share a poll</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1.2rem;">Every poll is a URL with your details baked in as parameters. No database needed. Share the URL anywhere — WhatsApp, email, SMS.</p>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Build your poll URL</div>
+          <div class="step-desc">Take your Netlify URL and add parameters. Replace spaces with <span class="tag">+</span> and separate options with <span class="tag">|</span>.</div>
+          <div class="url-box"><span class="param">https://miplanr-poll.netlify.app/?</span><br>
+<span class="param">q</span>=<span class="val">When+works+for+our+team+lunch?</span>&amp;<br>
+<span class="param">creator</span>=<span class="val">Josh+Sim</span>&amp;<br>
+<span class="param">event</span>=<span class="val">Team+Lunch</span>&amp;<br>
+<span class="param">deadline</span>=<span class="val">30+Jun</span>&amp;<br>
+<span class="param">opts</span>=<span class="val">Saturday+5+Jul+2pm|Sunday+6+Jul+12pm|Monday+7+Jul+1pm</span>&amp;<br>
+<span class="param">threshold</span>=<span class="val">5</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">URL parameters explained</div>
+          <div class="step-desc">
+            <span class="tag">q</span> — Your poll question<br>
+            <span class="tag">creator</span> — Your name (shows on the poll)<br>
+            <span class="tag">event</span> — What gets booked in the calendar when the poll closes<br>
+            <span class="tag">deadline</span> — Display text for closing date<br>
+            <span class="tag">opts</span> — Options separated by the <span class="tag">|</span> pipe character<br>
+            <span class="tag">threshold</span> — How many votes needed before auto-confirming
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Share the link</div>
+          <div class="step-desc">Paste the URL directly into a WhatsApp group, email, or SMS. When people tap it, they land on the branded miPlanr poll page. No app download needed.</div>
+          <div class="tip"><span class="tip-icon">💡</span><span>For long URLs, use a URL shortener like <strong>bit.ly</strong> or <strong>tinyurl.com</strong> to make it shareable. Or set up a custom domain under Netlify domain settings.</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Shortcut: ask miPlanr 2.0 to build the URL</div>
+          <div class="step-desc">In the miPlanr 2.0 chat, type: <em>"Create a poll asking when works for our team meeting, options are Monday 7 July 10am, Tuesday 8 July 2pm, Wednesday 9 July 9am, closing this Friday, 5 votes needed."</em> — miPlanr builds the URL for you instantly.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5: Google Calendar -->
+  <div class="section" id="s5">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">5</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Calendar sync</div>
+        <div class="sec-title">Google Calendar integration</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1rem;">Two levels: instant deep-link (no setup) and full API sync (requires OAuth).</p>
+      <div class="step">
+        <div class="step-num">A</div>
+        <div class="step-body">
+          <div class="step-title">Level 1 — Instant deep-link (already works, no setup)</div>
+          <div class="step-desc">When a voter clicks <strong>Google Calendar</strong> on the poll results page, it opens Google Calendar pre-filled with the event. The voter clicks Save. Done. This works today with zero configuration.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">B</div>
+        <div class="step-body">
+          <div class="step-title">Level 2 — Full API sync (auto-books without voter action)</div>
+          <div class="step-desc">For automatic booking when the poll closes, you need a Google Cloud project and OAuth credentials.</div>
+          <div style="margin-top:0.75rem">
+            <strong style="font-size:0.85rem;color:var(--navy);">Setup steps:</strong>
+            <div class="step" style="padding-top:0.75rem;margin-bottom:0.5rem">
+              <div class="step-num" style="width:22px;height:22px;font-size:0.68rem">1</div>
+              <div class="step-body"><div class="step-desc">Go to <strong>console.cloud.google.com</strong> → Create project → name it <strong>miPlanr Poll</strong></div></div>
+            </div>
+            <div class="step" style="padding-top:0.75rem;margin-bottom:0.5rem">
+              <div class="step-num" style="width:22px;height:22px;font-size:0.68rem">2</div>
+              <div class="step-body"><div class="step-desc">Enable <strong>Google Calendar API</strong>: APIs &amp; Services → Enable APIs → search Calendar → Enable</div></div>
+            </div>
+            <div class="step" style="padding-top:0.75rem;margin-bottom:0.5rem">
+              <div class="step-num" style="width:22px;height:22px;font-size:0.68rem">3</div>
+              <div class="step-body"><div class="step-desc">Create credentials: APIs &amp; Services → Credentials → Create → <strong>OAuth 2.0 Client ID</strong> → Web application. Add your Netlify URL as an authorised origin.</div></div>
+            </div>
+            <div class="step" style="padding-top:0.75rem;margin-bottom:0.5rem">
+              <div class="step-num" style="width:22px;height:22px;font-size:0.68rem">4</div>
+              <div class="step-body"><div class="step-desc">Download the credentials JSON. Add <span class="tag">GOOGLE_CLIENT_ID</span> and <span class="tag">GOOGLE_CLIENT_SECRET</span> to Netlify environment variables.</div></div>
+            </div>
+            <div class="step" style="padding-top:0.75rem;margin-bottom:0;">
+              <div class="step-num" style="width:22px;height:22px;font-size:0.68rem">5</div>
+              <div class="step-body"><div class="step-desc">The <span class="tag">parse-poll-result.js</span> function includes the <span class="tag">googleCalUrl</span> in its response — use this to call the Calendar API server-side when the poll threshold is reached.</div></div>
+            </div>
+          </div>
+          <div class="code"><span class="cm">// Example API call in your Netlify function</span>
+<span class="ck">POST</span> <span class="cs">https://www.googleapis.com/calendar/v3/calendars/primary/events</span>
+Authorization: Bearer {access_token}
+Content-Type: application/json
+
+{
+  "summary": "Team Lunch — Saturday 5 Jul, 2pm",
+  "start": { "dateTime": "2025-07-05T14:00:00", "timeZone": "Europe/London" },
+  "end":   { "dateTime": "2025-07-05T15:00:00", "timeZone": "Europe/London" },
+  "description": "Scheduled via miPlanr Poll · miplanr.com"
+}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S6: Outlook -->
+  <div class="section" id="s6">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">6</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Calendar sync</div>
+        <div class="sec-title">Outlook / Microsoft 365 integration</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="step">
+        <div class="step-num">A</div>
+        <div class="step-body">
+          <div class="step-title">Level 1 — Deep-link (already works)</div>
+          <div class="step-desc">The Outlook button on the poll page opens Outlook.com/Teams pre-filled. Works immediately with no setup.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">B</div>
+        <div class="step-body">
+          <div class="step-title">Level 2 — Microsoft Graph API (full auto-sync)</div>
+          <div class="step-desc">Register an app in Azure Active Directory for automatic booking.</div>
+          <div style="margin-top:0.75rem">
+            <div class="step" style="padding-top:0.75rem;margin-bottom:0.5rem">
+              <div class="step-num" style="width:22px;height:22px;font-size:0.68rem">1</div>
+              <div class="step-body"><div class="step-desc">Go to <strong>portal.azure.com</strong> → Azure Active Directory → App registrations → New registration. Name it <strong>miPlanr Poll</strong>. Set redirect URI to your Netlify URL.</div></div>
+            </div>
+            <div class="step" style="padding-top:0.75rem;margin-bottom:0.5rem">
+              <div class="step-num" style="width:22px;height:22px;font-size:0.68rem">2</div>
+              <div class="step-body"><div class="step-desc">API permissions → Add → Microsoft Graph → Delegated → <strong>Calendars.ReadWrite</strong>. Grant admin consent.</div></div>
+            </div>
+            <div class="step" style="padding-top:0.75rem;margin-bottom:0.5rem">
+              <div class="step-num" style="width:22px;height:22px;font-size:0.68rem">3</div>
+              <div class="step-body"><div class="step-desc">Certificates &amp; secrets → New client secret. Copy the value immediately. Add <span class="tag">AZURE_CLIENT_ID</span>, <span class="tag">AZURE_CLIENT_SECRET</span>, <span class="tag">AZURE_TENANT_ID</span> to Netlify env vars.</div></div>
+            </div>
+          </div>
+          <div class="code"><span class="cm">// Microsoft Graph API call</span>
+<span class="ck">POST</span> <span class="cs">https://graph.microsoft.com/v1.0/me/events</span>
+Authorization: Bearer {access_token}
+Content-Type: application/json
+
+{
+  "subject": "Team Lunch",
+  "start": { "dateTime": "2025-07-05T14:00:00", "timeZone": "GMT Standard Time" },
+  "end":   { "dateTime": "2025-07-05T15:00:00", "timeZone": "GMT Standard Time" },
+  "body":  { "content": "Scheduled via miPlanr Poll", "contentType": "text" }
+}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S7: WhatsApp Parser -->
+  <div class="section" id="s7">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">7</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">AI parsing</div>
+        <div class="sec-title">WhatsApp poll result → miPlanr (Claude parser)</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="info"><span class="info-icon">ℹ️</span><span><strong>Why this exists:</strong> WhatsApp has no API. You cannot auto-pull poll results. This parser bridges the gap — you copy the winning option text from WhatsApp, paste it here, and Claude converts it to a structured calendar event.</span></div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Check your WhatsApp poll result</div>
+          <div class="step-desc">In your WhatsApp group, tap the poll to see results. The winning option is shown with the most votes. <strong>Long-press the winning option text and copy it.</strong> E.g.: <em>"Saturday 5 July 2pm — 4 votes"</em></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Send it to the miPlanr parser</div>
+          <div class="step-desc">Once your Netlify function is deployed, call it with a POST request. You can do this from miPlanr 2.0 chat, or directly:</div>
+          <div class="code"><span class="ck">POST</span> <span class="cs">https://your-site.netlify.app/api/parse-poll-result</span>
+Content-Type: application/json
+
+{
+  <span class="cs">"rawText"</span>: <span class="cs">"Saturday 5 July 2pm - Team lunch - 4 votes"</span>
+}</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Claude returns a structured event</div>
+          <div class="step-desc">The response includes everything you need to book the event:</div>
+          <div class="code">{
+  <span class="cs">"title"</span>: <span class="cs">"Team Lunch"</span>,
+  <span class="cs">"date"</span>: <span class="cs">"2025-07-05"</span>,
+  <span class="cs">"startTime"</span>: <span class="cs">"14:00"</span>,
+  <span class="cs">"endTime"</span>: <span class="cs">"15:00"</span>,
+  <span class="cs">"confidence"</span>: <span class="cs">"high"</span>,
+  <span class="cs">"googleCalUrl"</span>: <span class="cs">"https://calendar.google.com/..."</span>,
+  <span class="cs">"outlookDeeplink"</span>: <span class="cs">"https://outlook.live.com/..."</span>,
+  <span class="cs">"platformPayloads"</span>: { <span class="cm">/* ready for ChurchSuite, iSAMS, etc */</span> }
+}</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Use the result to book across platforms</div>
+          <div class="step-desc">The <span class="tag">platformPayloads</span> object contains pre-built request bodies for every integration. Pass the relevant one to each platform's API (see sections 8–15 below).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S8: ChurchSuite -->
+  <div class="section" id="s8">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">8</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Platform sync</div>
+        <div class="sec-title">ChurchSuite calendar sync</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Get your ChurchSuite API key</div>
+          <div class="step-desc">Log into ChurchSuite → <strong>My ChurchSuite</strong> → <strong>API</strong> → <strong>Generate API Token</strong>. Copy the token. Add it to Netlify env vars as <span class="tag">CHURCHSUITE_API_KEY</span>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Find your organisation identifier</div>
+          <div class="step-desc">Your ChurchSuite URL looks like <strong>yourchurch.churchsuite.com</strong>. The subdomain (<em>yourchurch</em>) is your organisation identifier. Add as <span class="tag">CHURCHSUITE_ORG</span>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Create the calendar event</div>
+          <div class="step-desc">Use the payload from the parser response:</div>
+          <div class="code"><span class="ck">POST</span> <span class="cs">https://api.churchsuite.com/v1/calendar/events</span>
+X-Auth: {CHURCHSUITE_API_KEY}
+X-Account: {CHURCHSUITE_ORG}
+Content-Type: application/json
+
+{
+  <span class="cs">"name"</span>: <span class="cs">"Team Lunch"</span>,
+  <span class="cs">"datetime_start"</span>: <span class="cs">"2025-07-05T14:00:00"</span>,
+  <span class="cs">"datetime_end"</span>: <span class="cs">"2025-07-05T15:00:00"</span>,
+  <span class="cs">"description"</span>: <span class="cs">"Scheduled via miPlanr Poll"</span>,
+  <span class="cs">"visible_to"</span>: <span class="cs">"everyone"</span>
+}</div>
+          <div class="tip"><span class="tip-icon">💡</span><span>Full ChurchSuite API docs: <strong>support.churchsuite.com</strong> → Developer → Calendar API.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S9: iSAMS -->
+  <div class="section" id="s9">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">9</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Platform sync</div>
+        <div class="sec-title">iSAMS school calendar sync</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Enable the iSAMS API</div>
+          <div class="step-desc">Contact your iSAMS system administrator. They need to enable the REST API module and create an API client for miPlanr. You'll receive a <strong>Client ID</strong> and <strong>Client Secret</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Get an access token</div>
+          <div class="step-desc">iSAMS uses OAuth 2.0 client credentials flow:</div>
+          <div class="code"><span class="ck">POST</span> <span class="cs">https://[school].isams.cloud/auth/connect/token</span>
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&client_id={CLIENT_ID}
+&client_secret={CLIENT_SECRET}
+&scope=iSAMS</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Create the calendar entry</div>
+          <div class="code"><span class="ck">POST</span> <span class="cs">https://[school].isams.cloud/api/calendar/events</span>
+Authorization: Bearer {access_token}
+
+{
+  <span class="cs">"title"</span>: <span class="cs">"Team Lunch"</span>,
+  <span class="cs">"startDate"</span>: <span class="cs">"2025-07-05"</span>,
+  <span class="cs">"startTime"</span>: <span class="cs">"14:00"</span>,
+  <span class="cs">"endTime"</span>: <span class="cs">"15:00"</span>,
+  <span class="cs">"notes"</span>: <span class="cs">"Scheduled via miPlanr Poll"</span>
+}</div>
+          <div class="tip"><span class="tip-icon">💡</span><span>Full docs: <strong>developerhub.isams.cloud</strong>. Replace <em>[school]</em> with your school's iSAMS subdomain.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S10: Edulink -->
+  <div class="section" id="s10">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">10</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Platform sync</div>
+        <div class="sec-title">Edulink One sync</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Contact Edulink for API access</div>
+          <div class="step-desc">Edulink's API is available to schools on Enterprise plans. Contact <strong>support@edulinkone.com</strong> to request API credentials for your school. You'll receive a school ID and API key.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Call the JSON-RPC endpoint</div>
+          <div class="step-desc">Edulink uses a JSON-RPC style API:</div>
+          <div class="code"><span class="ck">POST</span> <span class="cs">https://api.edulinkone.com/api/?action=school.calendar.addEvent</span>
+Content-Type: application/json
+
+{
+  <span class="cs">"jsonrpc"</span>: <span class="cs">"2.0"</span>,
+  <span class="cs">"id"</span>: 1,
+  <span class="cs">"method"</span>: <span class="cs">"school.calendar.addEvent"</span>,
+  <span class="cs">"params"</span>: {
+    <span class="cs">"authtoken"</span>: <span class="cs">"{YOUR_API_KEY}"</span>,
+    <span class="cs">"school_id"</span>: <span class="cs">"{YOUR_SCHOOL_ID}"</span>,
+    <span class="cs">"title"</span>: <span class="cs">"Team Lunch"</span>,
+    <span class="cs">"date"</span>: <span class="cs">"2025-07-05"</span>,
+    <span class="cs">"time"</span>: <span class="cs">"14:00"</span>,
+    <span class="cs">"description"</span>: <span class="cs">"Scheduled via miPlanr Poll"</span>
+  }
+}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S11: Google Classroom -->
+  <div class="section" id="s11">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">11</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Platform sync</div>
+        <div class="sec-title">Google Classroom sync</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="info"><span class="info-icon">ℹ️</span><span>Google Classroom doesn't have a traditional calendar — miPlanr posts an <strong>Announcement</strong> to the relevant course, which appears in students' and teachers' feeds.</span></div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Enable Classroom API in Google Cloud</div>
+          <div class="step-desc">In your Google Cloud project (from Step 5), also enable the <strong>Google Classroom API</strong>. Add the scope <strong>classroom.announcements.create</strong> to your OAuth credentials.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Get the course ID</div>
+          <div class="step-desc">Go to classroom.google.com. Click your course. The URL contains the course ID: <em>classroom.google.com/c/<strong>AbcDef123</strong></em>. Copy that ID.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Post the announcement</div>
+          <div class="code"><span class="ck">POST</span> <span class="cs">https://classroom.googleapis.com/v1/courses/{courseId}/announcements</span>
+Authorization: Bearer {access_token}
+
+{
+  <span class="cs">"text"</span>: <span class="cs">"📅 Team Lunch confirmed: Saturday 5 July at 2pm. Scheduled via miPlanr Poll."</span>,
+  <span class="cs">"state"</span>: <span class="cs">"PUBLISHED"</span>
+}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S12: Salesforce -->
+  <div class="section" id="s12">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">12</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Platform sync</div>
+        <div class="sec-title">Salesforce event sync</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Create a Connected App in Salesforce</div>
+          <div class="step-desc">Setup → App Manager → New Connected App. Enable OAuth. Add scopes: <strong>api</strong> and <strong>refresh_token</strong>. Set callback URL to your Netlify URL. Save — you'll get a Consumer Key and Consumer Secret.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Get an access token (username-password flow for server)</div>
+          <div class="code"><span class="ck">POST</span> <span class="cs">https://login.salesforce.com/services/oauth2/token</span>
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password
+&client_id={CONSUMER_KEY}
+&client_secret={CONSUMER_SECRET}
+&username={SF_USERNAME}
+&password={SF_PASSWORD}{SF_SECURITY_TOKEN}</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Create the Event object</div>
+          <div class="code"><span class="ck">POST</span> <span class="cs">https://[instance].salesforce.com/services/data/v58.0/sobjects/Event</span>
+Authorization: Bearer {access_token}
+
+{
+  <span class="cs">"Subject"</span>: <span class="cs">"Team Lunch"</span>,
+  <span class="cs">"ActivityDateTime"</span>: <span class="cs">"2025-07-05T14:00:00.000Z"</span>,
+  <span class="cs">"DurationInMinutes"</span>: 60,
+  <span class="cs">"Description"</span>: <span class="cs">"Scheduled via miPlanr Poll"</span>
+}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S13: HubSpot -->
+  <div class="section" id="s13">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">13</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Platform sync</div>
+        <div class="sec-title">HubSpot meeting sync</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Create a Private App in HubSpot</div>
+          <div class="step-desc">HubSpot → Settings → Integrations → Private Apps → Create. Give it a name and enable scope: <strong>crm.objects.meetings.write</strong>. Copy the access token. Add as <span class="tag">HUBSPOT_TOKEN</span> in Netlify.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Create the meeting</div>
+          <div class="code"><span class="ck">POST</span> <span class="cs">https://api.hubapi.com/crm/v3/objects/meetings</span>
+Authorization: Bearer {HUBSPOT_TOKEN}
+
+{
+  <span class="cs">"properties"</span>: {
+    <span class="cs">"hs_meeting_title"</span>: <span class="cs">"Team Lunch"</span>,
+    <span class="cs">"hs_timestamp"</span>: 1751724000000, <span class="cm">// unix ms</span>
+    <span class="cs">"hs_meeting_end_time"</span>: 1751727600000,
+    <span class="cs">"hs_internal_meeting_notes"</span>: <span class="cs">"Scheduled via miPlanr Poll"</span>
+  }
+}</div>
+          <div class="tip"><span class="tip-icon">💡</span><span>The parser response includes unix millisecond timestamps ready to drop straight into HubSpot's <span class="tag">hs_timestamp</span> field.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S14: Teamo -->
+  <div class="section" id="s14">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">14</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Platform sync</div>
+        <div class="sec-title">Teamo team event sync</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Get your Teamo API key</div>
+          <div class="step-desc">Log into <strong>teamo.io</strong> → Settings → Integrations → API. Copy your team API key. Add as <span class="tag">TEAMO_API_KEY</span> in Netlify.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Create the event</div>
+          <div class="code"><span class="ck">POST</span> <span class="cs">https://app.teamo.io/api/v2/events</span>
+Authorization: Bearer {TEAMO_API_KEY}
+
+{
+  <span class="cs">"name"</span>: <span class="cs">"Team Lunch"</span>,
+  <span class="cs">"start_time"</span>: <span class="cs">"2025-07-05T14:00:00"</span>,
+  <span class="cs">"end_time"</span>: <span class="cs">"2025-07-05T15:00:00"</span>,
+  <span class="cs">"notes"</span>: <span class="cs">"Scheduled via miPlanr Poll"</span>,
+  <span class="cs">"availability_required"</span>: true
+}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S15: SportsEngine -->
+  <div class="section" id="s15">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">15</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Platform sync</div>
+        <div class="sec-title">SportsEngine schedule sync</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Enable SportsEngine API access</div>
+          <div class="step-desc">Contact SportsEngine support to enable API access for your organisation. You'll receive OAuth 2.0 credentials. Add <span class="tag">SPORTSENGINE_CLIENT_ID</span> and <span class="tag">SPORTSENGINE_CLIENT_SECRET</span> to Netlify env vars.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Create the schedule event</div>
+          <div class="code"><span class="ck">POST</span> <span class="cs">https://api.sportsengine.com/v2/schedules/events</span>
+Authorization: Bearer {access_token}
+
+{
+  <span class="cs">"title"</span>: <span class="cs">"Team Practice"</span>,
+  <span class="cs">"start_time"</span>: <span class="cs">"2025-07-05T14:00:00Z"</span>,
+  <span class="cs">"end_time"</span>: <span class="cs">"2025-07-05T15:00:00Z"</span>,
+  <span class="cs">"team_id"</span>: <span class="cs">"{YOUR_TEAM_ID}"</span>,
+  <span class="cs">"description"</span>: <span class="cs">"Scheduled via miPlanr Poll"</span>
+}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S16: miPlanr 2.0 -->
+  <div class="section" id="s16">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">16</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">miPlanr integration</div>
+        <div class="sec-title">Connect to miPlanr 2.0 chat</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1rem;">The Poll Hub feeds back into miPlanr's AI life coach. Here's how to wire it together.</p>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Add the poll URL endpoint to miPlanr 2.0's system prompt</div>
+          <div class="step-desc">In your miPlanr 2.0 Netlify function's system prompt, add the Poll Hub URL so the AI coach knows how to create polls:</div>
+          <div class="code"><span class="cm">// In miPlanr's system prompt</span>
+<span class="cs">"When a user asks to create a poll or schedule an event with a group,</span>
+<span class="cs"> use the Poll Hub at https://miplanr-poll.netlify.app to generate a shareable URL.</span>
+<span class="cs"> Format: https://miplanr-poll.netlify.app/?q={question}&opts={opt1}|{opt2}&event={title}"</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Add the WhatsApp parser endpoint</div>
+          <div class="step-desc">Also tell miPlanr 2.0 about the parser so it can handle pasted WhatsApp results:</div>
+          <div class="code"><span class="cs">"When a user pastes a WhatsApp poll result, call:</span>
+<span class="cs"> POST https://miplanr-poll.netlify.app/api/parse-poll-result</span>
+<span class="cs"> with { rawText: [pasted text] }</span>
+<span class="cs"> Then offer to book the returned event to their calendar."</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Life Plan integration</div>
+          <div class="step-desc">When a poll result is booked, miPlanr's Relationships or Community coach should log it. Add to the AI prompt:</div>
+          <div class="code"><span class="cs">"After booking a poll event, ask the user which Life Plan domain</span>
+<span class="cs"> this belongs to (Relationships, Community, Health, Career, Finance, Faith)</span>
+<span class="cs"> and log it as a milestone in that domain's progress tracker."</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Test the full flow</div>
+          <div class="step-desc">In miPlanr 2.0 chat, type: <em>"Create a poll for our next HTB small group — when can everyone meet? Options: Tuesday 8 July 7pm, Wednesday 9 July 7pm, Thursday 10 July 7pm."</em> — miPlanr should generate the poll URL, which you can share directly into the WhatsApp group.</div>
+          <div class="tip"><span class="tip-icon">💡</span><span>This is the full Option C pipeline: WhatsApp = distribution only. miPlanr = poll engine + booking + life planning.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S17: Troubleshooting -->
+  <div class="section" id="s17">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="sec-num">17</div>
+      <div class="sec-title-wrap">
+        <div class="sec-eyebrow">Help</div>
+        <div class="sec-title">Troubleshooting common issues</div>
+      </div>
+      <span class="sec-chevron">▾</span>
+    </div>
+    <div class="section-body">
+      <div class="step">
+        <div class="step-num">?</div>
+        <div class="step-body">
+          <div class="step-title">Poll page shows blank / default content</div>
+          <div class="step-desc">Check your URL parameters are correctly encoded. Spaces must be <span class="tag">+</span> or <span class="tag">%20</span>. Options must be separated by <span class="tag">|</span> (pipe). Test your URL in a URL decoder like <strong>urldecoder.org</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">?</div>
+        <div class="step-body">
+          <div class="step-title">Parser returns 502 error</div>
+          <div class="step-desc">Check that <span class="tag">ANTHROPIC_API_KEY</span> is correctly set in Netlify environment variables. Redeploy after adding — env vars don't apply to existing deploys. Check your Anthropic API key has credit.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">?</div>
+        <div class="step-body">
+          <div class="step-title">Google Calendar button does nothing</div>
+          <div class="step-desc">The deep-link URL opens Google Calendar in a new tab. Check your browser isn't blocking pop-ups from your Netlify URL. Allow pop-ups for the site in browser settings.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">?</div>
+        <div class="step-body">
+          <div class="step-title">Page won't embed in Google Sites</div>
+          <div class="step-desc">Make sure the <span class="tag">_headers</span> file is in the root of your repo and deployed. Check Netlify → Deploys → your latest deploy logs for any header errors. The <span class="tag">X-Frame-Options: ALLOWALL</span> header must be present.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">?</div>
+        <div class="step-body">
+          <div class="step-title">Platform API calls returning 401</div>
+          <div class="step-desc">Your access token has expired. Most OAuth tokens expire after 1 hour. Implement token refresh logic in your Netlify function, storing the refresh token in an environment variable.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">✉</div>
+        <div class="step-body">
+          <div class="step-title">Still stuck?</div>
+          <div class="step-desc">Ask miPlanr 2.0 chat directly — paste your error message and it will diagnose and fix it. Or email <strong>josh@vkrglobal.net</strong> for VKR Global support.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <strong>miPlanr Poll Hub</strong> — Setup &amp; Integration Guide<br>
+  Built by VKR Global · <a href="https://miplanr.com" style="color:var(--cyan);text-decoration:none">miplanr.com</a> · Powered by Claude (Anthropic)
+</footer>
+
+<script>
+function toggle(header) {
+  const section = header.parentElement;
+  section.classList.toggle('open');
+}
+// Open first section by default — already done in HTML
+</script>
+</body>
+</html>

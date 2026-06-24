@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>miPlanr.com — DNS Setup Guide</title>
+<style>
+:root{
+  --navy:#0A1A4D;--blue:#0072FF;--blue2:#0096FF;--cyan:#00C6FF;
+  --pink:#EC2AA7;--teal:#00BFA5;--grey:#A0AEC0;--white:#fff;
+  --off:#F4F7FC;--border:#E2E8F4;--text:#0A1A4D;--muted:#6B7A99;
+  --r:12px;--rs:8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  background:var(--off);color:var(--text)}
+
+.topbar{background:var(--navy);padding:.8rem 1.5rem;display:flex;
+  align-items:center;justify-content:space-between;
+  border-bottom:2px solid var(--blue);position:sticky;top:0;z-index:100}
+.topbar img{height:32px}
+.topbar-tag{font-size:.7rem;color:var(--grey);letter-spacing:.08em;text-transform:uppercase}
+
+/* HERO */
+.hero{background:var(--navy);padding:2.5rem 1.5rem 2rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;left:50%;top:-80px;transform:translateX(-50%);
+  width:600px;height:400px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(0,198,255,.14) 0%,transparent 65%);pointer-events:none}
+.hero-pill{display:inline-flex;align-items:center;gap:7px;
+  background:rgba(0,191,165,.18);border:1px solid rgba(0,191,165,.35);
+  color:var(--teal);font-size:.7rem;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;padding:4px 14px;border-radius:20px;margin-bottom:1rem}
+.hero-pill::before{content:'';width:7px;height:7px;border-radius:50%;
+  background:var(--teal);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.hero h1{font-size:1.8rem;font-weight:800;color:#fff;line-height:1.25;margin-bottom:.6rem}
+.hero h1 span{color:var(--cyan)}
+.hero p{font-size:.9rem;color:rgba(255,255,255,.6);max-width:520px;margin:0 auto 1.25rem}
+.time-badge{display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+  color:rgba(255,255,255,.75);font-size:.8rem;font-weight:600;
+  padding:5px 14px;border-radius:20px}
+
+/* LAYOUT */
+.page{max-width:780px;margin:0 auto;padding:2rem 1.25rem 3rem}
+
+/* STATUS CHECKER */
+.checker{background:#fff;border:1px solid var(--border);border-radius:var(--r);
+  padding:1.25rem 1.5rem;margin-bottom:1.75rem;box-shadow:0 2px 16px rgba(10,26,77,.08)}
+.checker h2{font-size:.75rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:.85rem}
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.status-item{display:flex;align-items:center;gap:10px;
+  padding:.7rem .9rem;border:1px solid var(--border);
+  border-radius:var(--rs);background:var(--off)}
+.s-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.s-dot.pending{background:var(--grey)}
+.s-dot.done{background:var(--teal);box-shadow:0 0 0 3px rgba(0,191,165,.2)}
+.s-dot.warn{background:#F6A623;box-shadow:0 0 0 3px rgba(246,166,35,.2)}
+.s-label{font-size:.82rem;font-weight:600;color:var(--navy)}
+.s-sub{font-size:.7rem;color:var(--muted);margin-top:1px}
+
+/* PHASE CARDS */
+.phase{background:#fff;border:1px solid var(--border);
+  border-radius:var(--r);margin-bottom:1.25rem;
+  overflow:hidden;box-shadow:0 2px 16px rgba(10,26,77,.07)}
+.phase-header{padding:1.1rem 1.5rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none}
+.phase-header:hover{background:var(--off)}
+.ph-num{width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.88rem;font-weight:800;flex-shrink:0;color:#fff}
+.ph-num.blue{background:linear-gradient(135deg,var(--blue),var(--cyan))}
+.ph-num.teal{background:linear-gradient(135deg,var(--teal),#00E5CC)}
+.ph-num.pink{background:linear-gradient(135deg,var(--pink),#FF6FC8)}
+.ph-num.done-num{background:linear-gradient(135deg,#00BFA5,#00E5CC)}
+.ph-title-wrap{flex:1}
+.ph-eyebrow{font-size:.65rem;font-weight:700;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:1px}
+.ph-title{font-size:1rem;font-weight:700;color:var(--navy)}
+.ph-time{font-size:.72rem;font-weight:600;color:var(--teal);
+  background:rgba(0,191,165,.1);border:1px solid rgba(0,191,165,.25);
+  padding:2px 9px;border-radius:20px;flex-shrink:0}
+.ph-chevron{color:var(--grey);font-size:1rem;transition:transform .2s;flex-shrink:0}
+.phase.open .ph-chevron{transform:rotate(180deg)}
+.phase-body{padding:0 1.5rem 1.5rem;display:none}
+.phase.open .phase-body{display:block}
+
+/* STEPS */
+.step{display:flex;gap:14px;padding-top:1.25rem;margin-bottom:.25rem}
+.step:first-of-type{padding-top:1.25rem}
+.step-bullet{display:flex;flex-direction:column;align-items:center;gap:0;flex-shrink:0}
+.step-num{width:28px;height:28px;border-radius:50%;background:var(--navy);
+  color:var(--cyan);font-size:.75rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center}
+.step-line{width:2px;flex:1;background:var(--border);margin-top:4px}
+.step-body{flex:1;padding-bottom:1.25rem;border-bottom:1px solid var(--border)}
+.step:last-of-type .step-body{border-bottom:none;padding-bottom:0}
+.step-title{font-size:.95rem;font-weight:700;color:var(--navy);margin-bottom:.35rem}
+.step-desc{font-size:.86rem;color:var(--muted);line-height:1.65}
+.step-desc strong{color:var(--text)}
+.step-desc a{color:var(--blue);text-decoration:none}
+.step-desc a:hover{text-decoration:underline}
+
+/* SCREENSHOT MOCKUP */
+.mockup{background:var(--navy);border-radius:var(--rs);
+  padding:1rem 1.25rem;margin-top:.85rem;position:relative}
+.mockup-bar{display:flex;align-items:center;gap:6px;margin-bottom:.75rem}
+.mockup-dot{width:8px;height:8px;border-radius:50%}
+.m-red{background:#FF5F57}.m-yel{background:#FFBD2E}.m-grn{background:#27C93F}
+.mockup-url{flex:1;background:rgba(255,255,255,.1);border-radius:4px;
+  padding:3px 10px;font-size:.72rem;color:rgba(255,255,255,.55);
+  font-family:'SF Mono','Consolas',monospace}
+.mockup-content{background:rgba(255,255,255,.06);border-radius:var(--rs);
+  padding:1rem;border:1px solid rgba(255,255,255,.1)}
+.mockup-row{display:flex;align-items:center;gap:10px;
+  padding:.55rem .75rem;border-radius:6px;margin-bottom:5px}
+.mockup-row:last-child{margin-bottom:0}
+.mockup-row.highlight{background:rgba(0,198,255,.15);border:1px solid rgba(0,198,255,.25)}
+.mockup-row.normal{background:rgba(255,255,255,.05)}
+.m-badge{font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:10px;flex-shrink:0}
+.m-badge.blue{background:rgba(0,114,255,.4);color:#7DD3FC}
+.m-badge.teal{background:rgba(0,191,165,.4);color:#6EE7D9}
+.m-badge.grey{background:rgba(160,174,192,.2);color:var(--grey)}
+.m-label{font-size:.78rem;color:rgba(255,255,255,.8);font-weight:600;flex:1}
+.m-value{font-family:'SF Mono','Consolas',monospace;font-size:.72rem;color:var(--cyan)}
+
+/* DNS RECORD TABLE */
+.dns-table{width:100%;border-collapse:collapse;margin-top:.85rem;
+  border-radius:var(--rs);overflow:hidden;border:1px solid var(--border)}
+.dns-table th{background:var(--navy);color:#fff;font-size:.7rem;
+  font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  padding:.6rem .85rem;text-align:left}
+.dns-table td{font-size:.82rem;color:var(--text);
+  padding:.6rem .85rem;border-bottom:1px solid var(--border);
+  vertical-align:middle}
+.dns-table tr:last-child td{border-bottom:none}
+.dns-table tr.key-row td{background:#EEF5FF}
+.dns-val{font-family:'SF Mono','Consolas',monospace;font-size:.77rem;
+  color:var(--blue);background:#EEF5FF;padding:2px 7px;
+  border-radius:4px;display:inline-block}
+.dns-val.teal{color:var(--teal);background:rgba(0,191,165,.1)}
+.record-tag{font-size:.68rem;font-weight:700;padding:2px 8px;
+  border-radius:10px;display:inline-block}
+.tag-a{background:#FEF3D7;color:#7A5C0A}
+.tag-cname{background:#EEF5FF;color:#003D99}
+
+/* TIP / WARN / INFO */
+.tip,.warn,.info{border-radius:var(--rs);padding:.8rem 1rem;
+  margin-top:.85rem;font-size:.84rem;line-height:1.6;
+  display:flex;gap:10px;align-items:flex-start}
+.tip{background:#E6FAF7;border-left:3px solid var(--teal);color:#006655}
+.warn{background:#FFF4E6;border-left:3px solid #F6A623;color:#7A4F00}
+.info{background:#EEF5FF;border-left:3px solid var(--blue);color:#003D99}
+.box-icon{flex-shrink:0;margin-top:1px;font-size:.95rem}
+
+/* CODE */
+.code{background:var(--navy);color:var(--cyan);
+  font-family:'SF Mono','Consolas',monospace;font-size:.78rem;
+  padding:.85rem 1rem;border-radius:var(--rs);margin-top:.75rem;
+  overflow-x:auto;line-height:1.65;white-space:pre}
+.c-grey{color:var(--grey)}.c-gold{color:#FFD580}.c-grn{color:#8DFF9E}
+
+/* CLOUDFLARE PROXY WARNING */
+.proxy-warn{background:linear-gradient(90deg,#FFF4E6,#FFF8EF);
+  border:1px solid #F6A623;border-radius:var(--rs);
+  padding:1rem 1.1rem;margin-top:.85rem;display:flex;gap:12px}
+.proxy-icon{font-size:1.4rem;flex-shrink:0}
+.proxy-text h4{font-size:.85rem;font-weight:700;color:#7A4F00;margin-bottom:.25rem}
+.proxy-text p{font-size:.82rem;color:#7A4F00;line-height:1.55}
+.proxy-text code{background:rgba(0,0,0,.08);padding:1px 5px;border-radius:3px;font-size:.78rem}
+
+/* VERIFY BANNER */
+.verify-banner{background:linear-gradient(90deg,var(--navy),#102060);
+  border-radius:var(--rs);padding:1.1rem 1.4rem;margin-top:1rem;
+  display:flex;align-items:center;gap:14px}
+.vb-icon{font-size:1.5rem;flex-shrink:0}
+.vb-text{flex:1}
+.vb-text h4{font-size:.9rem;font-weight:700;color:#fff;margin-bottom:.2rem}
+.vb-text p{font-size:.8rem;color:rgba(255,255,255,.6);line-height:1.5}
+.vb-link{display:inline-block;margin-top:.5rem;background:var(--blue);
+  color:#fff;font-size:.78rem;font-weight:700;padding:5px 14px;
+  border-radius:6px;text-decoration:none}
+.vb-link:hover{background:var(--blue2)}
+
+/* SUBDOMAINS */
+.subdomains-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:.85rem}
+.subdomain-card{background:var(--off);border:1px solid var(--border);
+  border-radius:var(--rs);padding:.85rem 1rem}
+.sd-url{font-family:'SF Mono','Consolas',monospace;font-size:.78rem;
+  color:var(--blue);font-weight:600;margin-bottom:.3rem}
+.sd-desc{font-size:.76rem;color:var(--muted)}
+
+/* FOOTER */
+footer{background:var(--navy);color:rgba(255,255,255,.45);
+  text-align:center;padding:1.75rem;font-size:.76rem;margin-top:2rem}
+footer strong{color:var(--cyan)}
+footer a{color:var(--teal);text-decoration:none}
+
+@media(max-width:580px){
+  .hero h1{font-size:1.4rem}
+  .status-grid{grid-template-columns:1fr}
+  .subdomains-grid{grid-template-columns:1fr}
+  .page{padding:1.25rem 1rem 2rem}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <img src="data:image/png;base64,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" alt="miPlanr"/>
+  <span class="topbar-tag">DNS Setup Guide</span>
+</div>
+
+<div class="hero">
+  <div class="hero-pill">miplanr.com → Live</div>
+  <h1>Connect <span>miplanr.com</span><br>to Netlify via Cloudflare</h1>
+  <p>Step-by-step guide to point your Cloudflare-registered domain to your Netlify site — including the poll hub, creator dashboard, and guide pages.</p>
+  <div class="time-badge">⏱ Takes about 15 minutes to set up · up to 24h to fully propagate</div>
+</div>
+
+<div class="page">
+
+  <!-- STATUS TRACKER -->
+  <div class="checker">
+    <h2>Setup checklist — tick off as you go</h2>
+    <div class="status-grid">
+      <div class="status-item">
+        <div class="s-dot done" id="d1"></div>
+        <div><div class="s-label">miplanr.com registered</div><div class="s-sub">✓ Done on Cloudflare</div></div>
+      </div>
+      <div class="status-item">
+        <div class="s-dot pending" id="d2"></div>
+        <div><div class="s-label">Netlify site deployed</div><div class="s-sub">Your .netlify.app URL working</div></div>
+      </div>
+      <div class="status-item">
+        <div class="s-dot pending" id="d3"></div>
+        <div><div class="s-label">Domain added in Netlify</div><div class="s-sub">miplanr.com in domain settings</div></div>
+      </div>
+      <div class="status-item">
+        <div class="s-dot pending" id="d4"></div>
+        <div><div class="s-label">DNS records in Cloudflare</div><div class="s-sub">CNAME + A records added</div></div>
+      </div>
+      <div class="status-item">
+        <div class="s-dot pending" id="d5"></div>
+        <div><div class="s-label">Proxy disabled on records</div><div class="s-sub">Orange cloud → grey cloud</div></div>
+      </div>
+      <div class="status-item">
+        <div class="s-dot pending" id="d6"></div>
+        <div><div class="s-label">SSL certificate active</div><div class="s-sub">https://miplanr.com working</div></div>
+      </div>
+    </div>
+    <div style="margin-top:.85rem;display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="markDone('d2')" style="font-size:.75rem;padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-family:inherit;color:var(--navy)">✓ Mark step 2 done</button>
+      <button onclick="markDone('d3')" style="font-size:.75rem;padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-family:inherit;color:var(--navy)">✓ Mark step 3 done</button>
+      <button onclick="markDone('d4')" style="font-size:.75rem;padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-family:inherit;color:var(--navy)">✓ Mark step 4 done</button>
+      <button onclick="markDone('d5')" style="font-size:.75rem;padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-family:inherit;color:var(--navy)">✓ Mark step 5 done</button>
+      <button onclick="markDone('d6')" style="font-size:.75rem;padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-family:inherit;color:var(--navy)">✓ Mark step 6 done</button>
+    </div>
+  </div>
+
+  <!-- WHY THIS SPECIFIC APPROACH -->
+  <div class="info" style="margin-bottom:1.5rem">
+    <span class="box-icon">ℹ️</span>
+    <span><strong>Why not point nameservers to Netlify?</strong> Cloudflare registered the domain, so Cloudflare controls the nameservers. Changing them away would lose Cloudflare's free DDoS protection, analytics, and SSL features. Instead we keep DNS on Cloudflare and add records that point <em>traffic</em> to Netlify — best of both worlds.</span>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div class="phase open" id="phase1">
+    <div class="phase-header" onclick="toggle('phase1')">
+      <div class="ph-num blue">1</div>
+      <div class="ph-title-wrap">
+        <div class="ph-eyebrow">Netlify</div>
+        <div class="ph-title">Add miplanr.com as a custom domain in Netlify</div>
+      </div>
+      <span class="ph-time">~3 min</span>
+      <span class="ph-chevron">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">1</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Open your Netlify site dashboard</div>
+          <div class="step-desc">Go to <a href="https://app.netlify.com" target="_blank">app.netlify.com</a> and click on your miPlanr poll site (the one you deployed). In the left sidebar, click <strong>Domain management</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">2</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Add a custom domain</div>
+          <div class="step-desc">Click the <strong>Add a domain</strong> button. Type in: <strong>miplanr.com</strong> and press Enter. Netlify will check if you own it — click <strong>Add domain</strong> to confirm.</div>
+          <div class="tip"><span class="box-icon">💡</span><span>Also add <strong>www.miplanr.com</strong> as a second domain — Netlify will auto-redirect it to miplanr.com.</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">3</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Get the DNS values Netlify needs</div>
+          <div class="step-desc">After adding, you'll see <strong>"Awaiting External DNS"</strong> next to both domains. Click the <strong>Check DNS configuration</strong> button on each. Netlify will show you the exact records to add — note them down. They look like this:</div>
+          <div class="mockup">
+            <div class="mockup-bar">
+              <div class="mockup-dot m-red"></div><div class="mockup-dot m-yel"></div><div class="mockup-dot m-grn"></div>
+              <div class="mockup-url">app.netlify.com / sites / miplanr-poll / domain-management</div>
+            </div>
+            <div class="mockup-content">
+              <div class="mockup-row highlight">
+                <div class="m-badge blue">CNAME</div>
+                <div class="m-label">www.miplanr.com</div>
+                <div class="m-value">your-site.netlify.app</div>
+              </div>
+              <div class="mockup-row highlight">
+                <div class="m-badge teal">ALIAS</div>
+                <div class="m-label">miplanr.com (apex)</div>
+                <div class="m-value">apex-loadbalancer.netlify.com</div>
+              </div>
+              <div class="mockup-row normal">
+                <div class="m-badge grey">STATUS</div>
+                <div class="m-label">Awaiting External DNS</div>
+                <div class="m-value" style="color:var(--grey)">pending…</div>
+              </div>
+            </div>
+          </div>
+          <div class="warn" style="margin-top:.85rem"><span class="box-icon">⚠️</span><span><strong>Copy your actual Netlify subdomain</strong> — it's unique to your site, like <strong>amazing-poll-abc123.netlify.app</strong>. Don't use a generic placeholder. Find it at the top of your site dashboard.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div class="phase" id="phase2">
+    <div class="phase-header" onclick="toggle('phase2')">
+      <div class="ph-num teal">2</div>
+      <div class="ph-title-wrap">
+        <div class="ph-eyebrow">Cloudflare</div>
+        <div class="ph-title">Add DNS records in Cloudflare</div>
+      </div>
+      <span class="ph-time">~5 min</span>
+      <span class="ph-chevron">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">1</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Open Cloudflare DNS settings</div>
+          <div class="step-desc">Go to <a href="https://dash.cloudflare.com" target="_blank">dash.cloudflare.com</a> → click on <strong>miplanr.com</strong> → click <strong>DNS</strong> in the left sidebar → then <strong>Records</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">2</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Delete any existing A or CNAME records for @ and www</div>
+          <div class="step-desc">If there are any existing records for <strong>@</strong> (root domain) or <strong>www</strong>, delete them first. They will conflict with the new records. Look for any records with type A or CNAME pointing to Cloudflare's parking page or anywhere else.</div>
+          <div class="warn"><span class="box-icon">⚠️</span><span>Do <strong>not</strong> delete MX records (email) or TXT records (verification). Only delete A and CNAME records for @ and www.</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">3</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Add the CNAME record for www</div>
+          <div class="step-desc">Click <strong>Add record</strong> and fill in:</div>
+          <table class="dns-table">
+            <thead><tr><th>Field</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr class="key-row"><td><strong>Type</strong></td><td><span class="record-tag tag-cname">CNAME</span></td></tr>
+              <tr class="key-row"><td><strong>Name</strong></td><td><span class="dns-val">www</span></td></tr>
+              <tr class="key-row"><td><strong>Target</strong></td><td><span class="dns-val">your-site-name.netlify.app</span> <span style="font-size:.75rem;color:var(--muted)">(your actual subdomain)</span></td></tr>
+              <tr><td><strong>TTL</strong></td><td>Auto</td></tr>
+              <tr><td><strong>Proxy status</strong></td><td>🔘 DNS only (grey cloud — see step 4)</td></tr>
+            </tbody>
+          </table>
+          <div class="tip"><span class="box-icon">💡</span><span>Replace <strong>your-site-name.netlify.app</strong> with your actual Netlify subdomain from Phase 1 Step 3.</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">4</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Add the CNAME record for the root domain (apex)</div>
+          <div class="step-desc">Cloudflare supports <strong>CNAME flattening</strong> — this lets you use a CNAME for the root domain (miplanr.com), which most DNS providers can't do. Click <strong>Add record</strong> again:</div>
+          <table class="dns-table">
+            <thead><tr><th>Field</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr class="key-row"><td><strong>Type</strong></td><td><span class="record-tag tag-cname">CNAME</span></td></tr>
+              <tr class="key-row"><td><strong>Name</strong></td><td><span class="dns-val">@</span> <span style="font-size:.75rem;color:var(--muted)">(the @ symbol = root domain)</span></td></tr>
+              <tr class="key-row"><td><strong>Target</strong></td><td><span class="dns-val teal">apex-loadbalancer.netlify.com</span></td></tr>
+              <tr><td><strong>TTL</strong></td><td>Auto</td></tr>
+              <tr><td><strong>Proxy status</strong></td><td>🔘 DNS only (grey cloud — see step below)</td></tr>
+            </tbody>
+          </table>
+          <div class="tip"><span class="box-icon">💡</span><span>This is the key advantage of using Cloudflare — <strong>CNAME flattening</strong> means the root domain (miplanr.com without www) points to Netlify perfectly, which standard DNS can't do.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 3 — PROXY WARNING (critical) -->
+  <div class="phase" id="phase3">
+    <div class="phase-header" onclick="toggle('phase3')">
+      <div class="ph-num pink">3</div>
+      <div class="ph-title-wrap">
+        <div class="ph-eyebrow">Cloudflare — Critical step</div>
+        <div class="ph-title">Turn OFF the orange proxy cloud</div>
+      </div>
+      <span class="ph-time">1 min</span>
+      <span class="ph-chevron">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="proxy-warn">
+        <div class="proxy-icon">🟠</div>
+        <div class="proxy-text">
+          <h4>This is the #1 cause of miplanr.com not working</h4>
+          <p>Cloudflare has an "orange cloud" proxy that intercepts traffic before it reaches Netlify. When it's ON for these records, Netlify can't verify your domain or provision your SSL certificate. You <strong>must</strong> set both records to <code>DNS only</code> (grey cloud) for Netlify to work correctly.</p>
+        </div>
+      </div>
+      <div class="step" style="margin-top:1rem">
+        <div class="step-bullet"><div class="step-num">1</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Find the proxy toggle on each record</div>
+          <div class="step-desc">In Cloudflare DNS Records, for both your <strong>www</strong> CNAME and your <strong>@</strong> CNAME, look at the <strong>Proxy status</strong> column. If it shows an orange cloud icon (🟠), click it to toggle it to a grey cloud (⚫ DNS only).</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">2</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Confirm both records show grey cloud</div>
+          <div class="step-desc">Your DNS records table should look like this after the change:</div>
+          <div class="mockup">
+            <div class="mockup-bar">
+              <div class="mockup-dot m-red"></div><div class="mockup-dot m-yel"></div><div class="mockup-dot m-grn"></div>
+              <div class="mockup-url">dash.cloudflare.com → miplanr.com → DNS → Records</div>
+            </div>
+            <div class="mockup-content">
+              <div class="mockup-row highlight">
+                <div class="m-badge teal">CNAME</div>
+                <div class="m-label">www → your-site.netlify.app</div>
+                <div class="m-value">⚫ DNS only</div>
+              </div>
+              <div class="mockup-row highlight">
+                <div class="m-badge teal">CNAME</div>
+                <div class="m-label">@ → apex-loadbalancer.netlify.com</div>
+                <div class="m-value">⚫ DNS only</div>
+              </div>
+            </div>
+          </div>
+          <div class="tip"><span class="box-icon">💡</span><span>Once Netlify's SSL certificate is active (usually within a few hours), you <em>can</em> turn the orange proxy back on — but many Netlify users leave it grey permanently and let Netlify handle SSL, which is simpler.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 4 — SSL -->
+  <div class="phase" id="phase4">
+    <div class="phase-header" onclick="toggle('phase4')">
+      <div class="ph-num blue">4</div>
+      <div class="ph-title-wrap">
+        <div class="ph-eyebrow">Netlify</div>
+        <div class="ph-title">Verify DNS and activate HTTPS</div>
+      </div>
+      <span class="ph-time">~2 min setup · then wait up to 24h</span>
+      <span class="ph-chevron">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">1</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Return to Netlify Domain management</div>
+          <div class="step-desc">Go back to <a href="https://app.netlify.com" target="_blank">app.netlify.com</a> → your site → <strong>Domain management</strong>. After a few minutes (sometimes seconds), <strong>"Awaiting External DNS"</strong> should change to <strong>"DNS verified ✓"</strong>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">2</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Provision the SSL certificate</div>
+          <div class="step-desc">Scroll down to the <strong>HTTPS</strong> section. Click <strong>Verify DNS configuration</strong>. Netlify will request a free Let's Encrypt SSL certificate. This takes 1–15 minutes. Once done, you'll see <strong>"Your site has HTTPS enabled"</strong>.</div>
+          <div class="info"><span class="box-icon">ℹ️</span><span>If it says "Certificate provisioning" for more than 30 minutes, double-check the Cloudflare proxy is set to grey (DNS only) on both records.</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">3</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Check DNS propagation</div>
+          <div class="step-desc">DNS changes can take up to 24 hours to reach every corner of the internet. Check propagation status at:</div>
+          <div class="verify-banner">
+            <div class="vb-icon">🌐</div>
+            <div class="vb-text">
+              <h4>DNS propagation checker</h4>
+              <p>Enter miplanr.com and www.miplanr.com to see if your records have spread globally.</p>
+              <a href="https://dnschecker.org/#CNAME/miplanr.com" target="_blank" class="vb-link">Check on DNSChecker.org ↗</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">4</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Test your live URLs</div>
+          <div class="step-desc">Once DNS is propagated, all these URLs should work:</div>
+          <div class="subdomains-grid">
+            <div class="subdomain-card">
+              <div class="sd-url">miplanr.com</div>
+              <div class="sd-desc">Main poll page (redirects to www)</div>
+            </div>
+            <div class="subdomain-card">
+              <div class="sd-url">www.miplanr.com</div>
+              <div class="sd-desc">Primary domain — poll voter page</div>
+            </div>
+            <div class="subdomain-card">
+              <div class="sd-url">www.miplanr.com/creator.html</div>
+              <div class="sd-desc">Poll Creator &amp; Manager dashboard</div>
+            </div>
+            <div class="subdomain-card">
+              <div class="sd-url">www.miplanr.com/guide.html</div>
+              <div class="sd-desc">Full integration setup guide</div>
+            </div>
+            <div class="subdomain-card">
+              <div class="sd-url">www.miplanr.com/api/parse-poll-result</div>
+              <div class="sd-desc">WhatsApp parser function endpoint</div>
+            </div>
+            <div class="subdomain-card">
+              <div class="sd-url">www.miplanr.com/poll/?q=...</div>
+              <div class="sd-desc">Shareable voter poll with URL params</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 5 — SUBDOMAINS -->
+  <div class="phase" id="phase5">
+    <div class="phase-header" onclick="toggle('phase5')">
+      <div class="ph-num teal">5</div>
+      <div class="ph-title-wrap">
+        <div class="ph-eyebrow">Optional but recommended</div>
+        <div class="ph-title">Set up subdomains for miPlanr products</div>
+      </div>
+      <span class="ph-time">~5 min</span>
+      <span class="ph-chevron">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="step-desc" style="padding-top:1.25rem;margin-bottom:1rem">As miPlanr grows, you can point subdomains to different Netlify sites or other services. Add each as a CNAME in Cloudflare:</div>
+      <table class="dns-table">
+        <thead><tr><th>Subdomain</th><th>Type</th><th>Points to</th><th>Use case</th></tr></thead>
+        <tbody>
+          <tr><td><span class="dns-val">poll.miplanr.com</span></td><td><span class="record-tag tag-cname">CNAME</span></td><td>your-site.netlify.app</td><td>Poll Hub (clean URL)</td></tr>
+          <tr><td><span class="dns-val">app.miplanr.com</span></td><td><span class="record-tag tag-cname">CNAME</span></td><td>miplanr-app.netlify.app</td><td>Main miPlanr 2.0 app</td></tr>
+          <tr><td><span class="dns-val">api.miplanr.com</span></td><td><span class="record-tag tag-cname">CNAME</span></td><td>vkrsync-mvp-production.up.railway.app</td><td>VKRSync / API backend</td></tr>
+          <tr><td><span class="dns-val">docs.miplanr.com</span></td><td><span class="record-tag tag-cname">CNAME</span></td><td>miplanr-docs.netlify.app</td><td>Documentation site</td></tr>
+        </tbody>
+      </table>
+      <div class="tip"><span class="box-icon">💡</span><span>Each subdomain CNAME also needs <strong>proxy set to grey (DNS only)</strong> if pointing to Netlify. For Railway (api.miplanr.com), you can leave the orange proxy ON — Railway supports it.</span></div>
+    </div>
+  </div>
+
+  <!-- PHASE 6 — TROUBLESHOOTING -->
+  <div class="phase" id="phase6">
+    <div class="phase-header" onclick="toggle('phase6')">
+      <div class="ph-num pink">6</div>
+      <div class="ph-title-wrap">
+        <div class="ph-eyebrow">If things go wrong</div>
+        <div class="ph-title">Troubleshooting DNS issues</div>
+      </div>
+      <span class="ph-chevron">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">?</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">Still seeing "DNS_PROBE_FINISHED_NXDOMAIN"</div>
+          <div class="step-desc">This means DNS hasn't propagated yet, or the records are wrong. Check: (1) Both CNAME records are saved in Cloudflare. (2) Proxy is grey/off on both. (3) Wait at least 30 minutes. (4) Try on mobile data (bypasses local DNS cache).</div>
+          <div class="code"><span class="c-grey"># Test in terminal (Mac/Linux) or Windows PowerShell:</span>
+nslookup miplanr.com
+nslookup www.miplanr.com
+
+<span class="c-grey"># Expected output should mention netlify.com</span>
+<span class="c-grn">www.miplanr.com CNAME your-site.netlify.app</span></div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">?</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">SSL certificate stuck on "Provisioning"</div>
+          <div class="step-desc">This almost always means the Cloudflare orange proxy is ON. Go to Cloudflare → DNS → Records → find your CNAME records → click the orange cloud to make it grey. Then go back to Netlify → HTTPS → Verify DNS configuration.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">?</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">www works but miplanr.com (root) doesn't</div>
+          <div class="step-desc">Make sure you added the <strong>@</strong> CNAME pointing to <strong>apex-loadbalancer.netlify.com</strong>. Also check in Netlify that both miplanr.com and www.miplanr.com are added as domains (not just one). Netlify must know about both.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">?</div><div class="step-line"></div></div>
+        <div class="step-body">
+          <div class="step-title">miplanr.com redirecting to the wrong site</div>
+          <div class="step-desc">In Netlify, go to <strong>Domain management</strong> and check which site the domain is assigned to. If you have multiple Netlify sites, the domain must be added to the correct one (the miplanr-poll site, not another project).</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-bullet"><div class="step-num">✉</div></div>
+        <div class="step-body">
+          <div class="step-title">Still stuck after 24 hours?</div>
+          <div class="step-desc">Contact <a href="https://answers.netlify.com" target="_blank">Netlify Support Forums</a> with a screenshot of your Cloudflare DNS records and your Netlify domain management screen. Or paste the error into <strong>miPlanr 2.0 chat</strong> for instant diagnosis.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUMMARY TABLE -->
+  <div class="phase" id="phase7">
+    <div class="phase-header" onclick="toggle('phase7')">
+      <div class="ph-num done-num">✓</div>
+      <div class="ph-title-wrap">
+        <div class="ph-eyebrow">Quick reference</div>
+        <div class="ph-title">Complete DNS record summary</div>
+      </div>
+      <span class="ph-chevron">▾</span>
+    </div>
+    <div class="phase-body">
+      <div class="step-desc" style="padding-top:1.25rem;margin-bottom:1rem">All records to add in Cloudflare. Print or bookmark this page for reference:</div>
+      <table class="dns-table">
+        <thead><tr><th>Type</th><th>Name</th><th>Value / Target</th><th>Proxy</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr class="key-row">
+            <td><span class="record-tag tag-cname">CNAME</span></td>
+            <td><span class="dns-val">@</span></td>
+            <td><span class="dns-val teal">apex-loadbalancer.netlify.com</span></td>
+            <td>⚫ DNS only</td>
+            <td>Root domain → Netlify</td>
+          </tr>
+          <tr class="key-row">
+            <td><span class="record-tag tag-cname">CNAME</span></td>
+            <td><span class="dns-val">www</span></td>
+            <td><span class="dns-val">your-site.netlify.app</span></td>
+            <td>⚫ DNS only</td>
+            <td>www → Netlify</td>
+          </tr>
+          <tr>
+            <td><span class="record-tag tag-cname">CNAME</span></td>
+            <td><span class="dns-val">poll</span></td>
+            <td><span class="dns-val">your-site.netlify.app</span></td>
+            <td>⚫ DNS only</td>
+            <td>poll.miplanr.com (optional)</td>
+          </tr>
+          <tr>
+            <td><span class="record-tag tag-cname">CNAME</span></td>
+            <td><span class="dns-val">api</span></td>
+            <td><span class="dns-val">vkrsync-mvp-production.up.railway.app</span></td>
+            <td>🟠 Proxied OK</td>
+            <td>VKRSync API (optional)</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="warn" style="margin-top:1rem"><span class="box-icon">⚠️</span><span>Replace <strong>your-site.netlify.app</strong> with your actual Netlify subdomain throughout. Never use a generic placeholder — the exact value matters.</span></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <strong>miPlanr DNS Setup Guide</strong> · Built by VKR Global<br>
+  <a href="https://docs.netlify.com/manage/domains/configure-domains/configure-external-dns/">Netlify External DNS Docs</a> ·
+  <a href="https://developers.cloudflare.com/dns/manage-dns-records/how-to/create-dns-records/">Cloudflare DNS Records Docs</a>
+</footer>
+
+<script>
+function toggle(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+function markDone(id) {
+  const dot = document.getElementById(id);
+  if (dot) { dot.className = 's-dot done'; }
+}
+</script>
+</body>
+</html>
