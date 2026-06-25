@@ -623,7 +623,7 @@ function livePreview() {
     threshold,
     ...(deadlineDisp && {deadline: deadlineDisp})
   });
-  el.textContent = BASE_URL + 'poll/?' + params.toString();
+  el.textContent = BASE_URL + 'poll.html?' + params.toString();
 }
 
 function getPollUrl(p) {
@@ -634,7 +634,7 @@ function getPollUrl(p) {
     opts: p.options.join('|'),
     threshold: p.threshold
   });
-  return BASE_URL + 'poll/?' + params.toString();
+  return BASE_URL + 'poll.html?' + params.toString();
 }
 
 function copyUrl() {
