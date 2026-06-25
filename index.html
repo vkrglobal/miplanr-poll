@@ -416,7 +416,7 @@ textarea{resize:vertical;min-height:70px}
 <!-- MODAL -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
-    <h2 id="modalTitle">Close this poll?</h2>
+    <h2 id="modalTitle">Close this poll.html?</h2>
     <p id="modalBody">The winning option will be booked to your calendar and participants notified.</p>
     <div class="modal-btns">
       <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
@@ -845,7 +845,7 @@ function executePollClose() {
 
 // ── DELETE ──
 function deletePoll(id) {
-  if (!confirm('Delete this poll? This cannot be undone.')) return;
+  if (!confirm('Delete this poll.html ? This cannot be undone.')) return;
   polls = polls.filter(p=>p.id!==id);
   savePolls();
   renderDashboard();
