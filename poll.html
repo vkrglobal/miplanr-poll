@@ -633,14 +633,14 @@ function renderOptions(showVotes) {
     const pct = totalVotes > 0 ? Math.round(v/totalVotes*100) : 0;
     const isWin = v === Math.max(...Object.values(votes)) && v > 0;
     const isSel = i === selected;
-    return \`<button class="option-btn \${isSel?'selected':''} \${showVotes?'voted':''} \${showVotes&&isWin?'winner':''}"
-      onclick="pick(\${i})" \${voted?'disabled':''}>
-      \${showVotes?'<div class="opt-bar" style="width:'+pct+'%"></div>':''}
+    return `<button class="option-btn ${isSel?'selected':''} ${showVotes?'voted':''} ${showVotes&&isWin?'winner':''}"
+      onclick="pick(${i})" ${voted?'disabled':''}>
+      ${showVotes?'<div class="opt-bar" style="width:'+pct+'%"></div>':''}
       <div class="opt-radio"><div class="opt-radio-dot"></div></div>
-      <span class="opt-text">\${opt}</span>
-      <span class="opt-pct">\${showVotes?pct+'%':''}</span>
-      \${showVotes&&isWin?'<span class="winner-badge">&#x2714; Leading</span>':''}
-    </button>\`;
+      <span class="opt-text">${opt}</span>
+      <span class="opt-pct">${showVotes?pct+'%':''}</span>
+      ${showVotes&&isWin?'<span class="winner-badge">&#x2714; Leading</span>':''}
+    </button>`;
   }).join('');
 }
 
