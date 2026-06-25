@@ -602,7 +602,7 @@
 
 <div class="toast" id="toast"><span id="toastMsg">Synced!</span></div>
 
-
+<script>
 const P = {
   question: new URLSearchParams(location.search).get('q') || 'When works best for everyone?',
   creator:  new URLSearchParams(location.search).get('creator') || 'Josh Sim',
@@ -611,14 +611,11 @@ const P = {
   options:  (new URLSearchParams(location.search).get('opts') || 'Saturday 5 Jul, 2pm|Sunday 6 Jul, 12pm|Monday 7 Jul, 1pm').split('|'),
   threshold: parseInt(new URLSearchParams(location.search).get('threshold') || '5')
 };
-<script>
-alert(location.search);
 
 const votes = {};
 P.options.forEach((_,i) => votes[i] = Math.floor(Math.random()*3));
 let totalVotes = Object.values(votes).reduce((a,b)=>a+b,0);
 let selected = null, voted = false;
-alert(location.search)
 function init() {
   document.getElementById('pollQuestion').textContent = P.question;
   document.getElementById('creatorName').textContent = P.creator;
