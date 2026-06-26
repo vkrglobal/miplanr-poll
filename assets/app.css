@@ -35,3 +35,13 @@ input[type="date"]{appearance:auto;-webkit-appearance:auto;cursor:pointer}
 .translate-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
 .translate-row select{max-width:260px;background:#fff}
 .translate-panel small{display:block;color:var(--muted);line-height:1.35}
+
+/* v7.1 translate first */
+.translate-bar{background:#f2fbff;border:1px solid #bdefff;border-radius:18px;padding:12px 14px;margin:0 0 14px 0;box-shadow:0 8px 24px rgba(7,42,75,.08)}
+.translate-main{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.translate-main strong{color:var(--navy);margin-right:4px}
+.translate-main select{max-width:240px;background:white}
+.translate-bar small{display:block;color:var(--muted);line-height:1.35;margin-top:6px}
+.google-translate-box{height:0;overflow:hidden;opacity:0;pointer-events:none}
+body>.skiptranslate, .goog-te-banner-frame{display:none!important}
+body{top:0!important}

@@ -91,97 +91,84 @@ function renderPreview(){
 async function suggestPlaces(q){if(!q||q.length<3)return [];try{const r=await fetch(api('place-suggest')+'?q='+encodeURIComponent(q));return await r.json()}catch(e){return[]}}
 
 
-// v7.0 free-first poll translation.
-// In-page translation uses the free MyMemory endpoint where available, and the button also
-// provides a Google Translate website fallback for whole-page browser translation.
+// v7.1 poll-first translation bar.
+// Uses the free Google Translate website widget for whole-page translation and keeps a clear fallback link.
 const MI_TRANSLATE_LANGS = {
-  en:{label:'English', mm:'en'},
-  fr:{label:'French', mm:'fr'},
-  es:{label:'Spanish', mm:'es'},
-  it:{label:'Italian', mm:'it'},
-  pt:{label:'Portuguese', mm:'pt'},
-  de:{label:'German', mm:'de'},
-  'zh-CN':{label:'Mandarin Chinese', mm:'zh-CN'},
-  yue:{label:'Cantonese', mm:'zh-CN', note:'Cantonese browser translation support is limited, so Mandarin Chinese is used as the safest free in-page fallback.'},
-  nan:{label:'Hokkien', mm:'zh-TW', note:'Hokkien is not reliably supported by free whole-page translators, so Traditional Chinese is used as the closest free in-page fallback.'}
+  en:{label:'English', gt:'en'},
+  fr:{label:'French', gt:'fr'},
+  es:{label:'Spanish', gt:'es'},
+  it:{label:'Italian', gt:'it'},
+  pt:{label:'Portuguese', gt:'pt'},
+  de:{label:'German', gt:'de'},
+  'zh-CN':{label:'Mandarin Chinese', gt:'zh-CN'},
+  yue:{label:'Cantonese', gt:'zh-TW', note:'Cantonese support is limited in free browser translation, so Traditional Chinese is used as the closest fallback.'},
+  nan:{label:'Hokkien', gt:'zh-TW', note:'Hokkien support is limited in free browser translation, so Traditional Chinese is used as the closest fallback.'}
 };
 function googleTranslateUrl(lang){
-  return 'https://translate.google.com/translate?sl=auto&tl='+encodeURIComponent(lang)+'&u='+encodeURIComponent(location.href);
+  const gt=(MI_TRANSLATE_LANGS[lang]||MI_TRANSLATE_LANGS.en).gt;
+  return 'https://translate.google.com/translate?sl=auto&tl='+encodeURIComponent(gt)+'&u='+encodeURIComponent(location.href);
 }
-function ensureTranslatePanel(hostId){
-  let panel=$('translatePanel');
-  if(!panel){
-    panel=document.createElement('div');
-    panel.id='translatePanel';
-    panel.className='translate-panel notice visible';
-    panel.innerHTML=`<b>Translate this poll</b><div class="translate-row"><select id="translateLang">${Object.entries(MI_TRANSLATE_LANGS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select><button type="button" class="btn" id="applyTranslate">Translate now</button><button type="button" class="btn secondary" id="googleTranslate">Google Translate fallback</button></div><small id="translateStatus">Choose a language, then press Translate now. This translates visible poll text, questions, answers, descriptions, placeholders and typed inputs. Hokkien/Cantonese use the closest free Chinese fallback.</small>`;
-    const host=$(hostId)||$('createMsg')||$('pollForm')||document.querySelector('main')||document.body;
-    if(host.id==='createMsg') host.parentNode.insertBefore(panel, host);
-    else host.appendChild(panel);
-    $('googleTranslate').onclick=()=>window.open(googleTranslateUrl($('translateLang').value),'_blank');
-    $('applyTranslate').onclick=()=>translateCurrentPage($('translateLang').value);
-  }
-  panel.style.display='block';
-  panel.classList.add('visible');
-  panel.scrollIntoView({behavior:'smooth', block:'center'});
-  return panel;
+function setTranslateCookie(lang){
+  const gt=(MI_TRANSLATE_LANGS[lang]||MI_TRANSLATE_LANGS.en).gt;
+  const val=lang==='en'?'/en/en':'/auto/'+gt;
+  const host=location.hostname;
+  document.cookie='googtrans='+val+';path=/;max-age=31536000';
+  if(host.includes('.')) document.cookie='googtrans='+val+';path=/;domain=.'+host.split('.').slice(-2).join('.')+';max-age=31536000';
 }
-function openTranslatePanel(hostId){
-  try{ ensureTranslatePanel(hostId); }
-  catch(e){ window.open(googleTranslateUrl('es'),'_blank'); }
-}
-async function mmTranslate(text, target){
-  text=String(text||'').trim(); if(!text) return text;
-  const lang=MI_TRANSLATE_LANGS[target]||MI_TRANSLATE_LANGS.en;
-  if(target==='en') return text;
-  const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(text)+'&langpair=en|'+encodeURIComponent(lang.mm);
-  const r=await fetch(url); if(!r.ok) throw new Error('translation failed');
-  const j=await r.json(); return j?.responseData?.translatedText || text;
-}
-function getOriginal(el, attr){
-  const key='original'+attr.charAt(0).toUpperCase()+attr.slice(1);
-  if(!el.dataset[key]) el.dataset[key]=attr==='text'?el.nodeValue:(el.getAttribute(attr)||el.value||'');
-  return el.dataset[key];
-}
-function textNodesUnder(root){
-  const out=[]; const skip=new Set(['SCRIPT','STYLE','NOSCRIPT','IFRAME']);
-  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode(n){
-    if(!n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
-    const p=n.parentElement; if(!p||skip.has(p.tagName)||p.closest('#translatePanel')) return NodeFilter.FILTER_REJECT;
-    return NodeFilter.FILTER_ACCEPT;
-  }});
-  while(walker.nextNode()) out.push(walker.currentNode);
-  return out;
-}
-async function translateCurrentPage(lang){
-  ensureTranslatePanel(document.body.dataset.page==='poll'?'pollMount':null);
-  const status=$('translateStatus'); const button=$('applyTranslate');
-  button.disabled=true; button.textContent='Translating…'; status.textContent='Translating visible poll text and form fields…';
+window.googleTranslateElementInit=function(){
   try{
-    const root=document.querySelector('main')||document.body;
-    const jobs=[];
-    for(const n of textNodesUnder(root)){
-      const original=getOriginal(n,'text');
-      jobs.push(mmTranslate(original,lang).then(t=>{n.nodeValue=t;}));
-    }
-    for(const el of root.querySelectorAll('input, textarea')){
-      if(el.type==='hidden' || el.type==='date' || el.type==='range' || el.type==='number') continue;
-      const val=el.value && el.value.trim();
-      const ph=el.getAttribute('placeholder');
-      if(val){const original=getOriginal(el,'value'); jobs.push(mmTranslate(original,lang).then(t=>{el.value=t;}));}
-      if(ph){const key='originalPlaceholder'; if(!el.dataset[key]) el.dataset[key]=ph; jobs.push(mmTranslate(el.dataset[key],lang).then(t=>el.setAttribute('placeholder',t)));}
-    }
-    await Promise.all(jobs);
-    const note=MI_TRANSLATE_LANGS[lang]?.note;
-    status.textContent= note || 'Translation applied. Use English to reset before translating to another language.';
-    if(typeof renderPreview==='function' && document.body.dataset.page==='create') renderPreview();
-  }catch(e){
-    status.textContent='In-page translation could not complete. Opening Google Translate fallback…';
-    window.open(googleTranslateUrl(lang),'_blank');
-  }finally{button.disabled=false; button.textContent='Translate this poll';}
+    new google.translate.TranslateElement({pageLanguage:'en', includedLanguages:'en,fr,es,it,pt,de,zh-CN,zh-TW', autoDisplay:false}, 'google_translate_element');
+  }catch(e){}
+};
+function loadGoogleTranslate(){
+  return new Promise(resolve=>{
+    if(window.google && google.translate && google.translate.TranslateElement) return resolve();
+    if(document.getElementById('googleTranslateScript')) return setTimeout(resolve,1200);
+    const s=document.createElement('script');
+    s.id='googleTranslateScript';
+    s.src='https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    s.onload=()=>setTimeout(resolve,1200);
+    s.onerror=()=>resolve();
+    document.head.appendChild(s);
+  });
 }
+function tryGoogleCombo(lang){
+  const gt=(MI_TRANSLATE_LANGS[lang]||MI_TRANSLATE_LANGS.en).gt;
+  const combo=document.querySelector('.goog-te-combo');
+  if(combo){ combo.value=gt; combo.dispatchEvent(new Event('change')); return true; }
+  return false;
+}
+async function applyWholePageTranslation(lang){
+  const status=$('translateStatus');
+  if(status) status.textContent='Translating the whole poll…';
+  setTranslateCookie(lang);
+  await loadGoogleTranslate();
+  let ok=tryGoogleCombo(lang);
+  if(!ok){ setTimeout(()=>tryGoogleCombo(lang),1000); }
+  const note=MI_TRANSLATE_LANGS[lang]?.note;
+  if(status) status.textContent=(note?note+' ':'')+'If the page has not changed after a few seconds, use Google Translate fallback.';
+}
+function mountTranslateBar(hostId){
+  let bar=$('miTranslateBar');
+  const host=$(hostId)||document.querySelector('main')||document.body;
+  if(!bar){
+    bar=document.createElement('div');
+    bar.id='miTranslateBar';
+    bar.className='translate-bar';
+    bar.innerHTML=`<div class="translate-main"><strong>🌍 Translate poll</strong><select id="translateLang" aria-label="Translate language">${Object.entries(MI_TRANSLATE_LANGS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select><button type="button" class="btn pink" id="applyTranslate">Translate</button><button type="button" class="btn secondary" id="googleTranslate">Open in Google Translate</button></div><div id="google_translate_element" class="google-translate-box"></div><small id="translateStatus">Translate first, then all poll headers, questions, answers and buttons should appear in the selected language.</small>`;
+    host.insertBefore(bar, host.firstChild);
+    $('applyTranslate').onclick=()=>applyWholePageTranslation($('translateLang').value);
+    $('googleTranslate').onclick=()=>window.open(googleTranslateUrl($('translateLang').value),'_blank');
+    loadGoogleTranslate();
+  } else if(bar.parentElement!==host){
+    host.insertBefore(bar, host.firstChild);
+  }
+  return bar;
+}
+function openTranslatePanel(hostId){ mountTranslateBar(hostId); applyWholePageTranslation($('translateLang')?.value||'es'); }
 
 function initCreate(){
+  mountTranslateBar('pollForm');
   updateDurationControls(); smartTimes();
   $('quickDate')?.addEventListener('change', e=>applyQuickDate(e.target.value));
   applyQuickDate($('quickDate')?.value||'next30');
@@ -191,7 +178,7 @@ function initCreate(){
   ['New Zealand','United Kingdom','Greece'].forEach(v=>$('options').appendChild(optionRow(v)));
   document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',renderPreview));
   $('addOption').onclick=()=>{$('options').appendChild(optionRow());renderPreview()}; $('previewBtn').onclick=renderPreview;
-  $('translateBtn').onclick=()=>openTranslatePanel(null);
+  $('translateBtn').onclick=()=>openTranslatePanel('pollForm');
   $('location').addEventListener('input',async e=>{const box=$('placeSuggestions');const items=await suggestPlaces(e.target.value);box.innerHTML=items.slice(0,5).map(p=>`<button type="button" data-lat="${p.lat||''}" data-lon="${p.lon||''}">${p.label||p.display_name}</button>`).join('');box.style.display=items.length?'block':'none';box.querySelectorAll('button').forEach(b=>b.onclick=()=>{$('location').value=b.textContent;$('location').dataset.lat=b.dataset.lat||'';$('location').dataset.lon=b.dataset.lon||'';box.style.display='none';renderPreview()})});
   renderPreview();
   $('pollForm').onsubmit=async ev=>{
@@ -215,8 +202,9 @@ function initCreate(){
 }
 async function initPoll(){
   const params=new URLSearchParams(location.search);const slug=params.get('slug')||location.pathname.split('/').pop();const invite=params.get('invite')||'';const res=await fetch(api('get-poll')+'?slug='+encodeURIComponent(slug)+'&invite='+encodeURIComponent(invite));const data=await res.json();if(!res.ok){$('pollMount').innerHTML='<p>Could not load poll.</p>';return}const p=data.poll;const total=data.votes.reduce((a,v)=>a+Number(v.count),0);const voteMap=Object.fromEntries(data.votes.map(v=>[v.option_id,Number(v.count)]));const opts=p.options||[];const enriched=opts.map(o=>({ ...o, visual: miPlanrVisual.iconFor(o.option_text,p.question)}));let selected=data.my_vote?.option_id||'';
-  $('pollMount').innerHTML=`<div class="poll-card"><div class="poll-head"><div style="font-size:42px">${iconHTML(p.title+' '+p.question)}</div><h2>${p.title}</h2><p>${p.question}</p><small>${p.location||''} ${p.start_at?' • '+formatFriendlyDate(new Date(p.start_at))+' '+formatTime12(new Date(p.start_at)):''}</small></div><div class="poll-body"><p>${p.description||''}</p><div id="voteChoices"></div><input id="voterName" placeholder="Your name"><input id="voterEmail" placeholder="Your email"><div class="actions"><button class="btn" id="voteNow">${data.my_vote?'Update my vote':'Cast my vote'}</button><button class="btn secondary" id="gcal">Google Calendar</button><button class="btn secondary" id="ocal">Outlook</button><button class="btn pink" id="pollTranslateBtn">Translate</button></div><div id="voteMsg"></div></div></div>`;
-  function draw(){document.getElementById('voteChoices').innerHTML=enriched.map(o=>{const c=voteMap[o.id]||0;const pct=total?Math.round(c/total*100):0;return `<label class="choice vote-option"><input type="radio" name="opt" value="${o.id}" ${selected===o.id?'checked':''}><span class="icon-badge">${iconHTMLFromResult(o.visual)}</span><div class="choice-content"><b>${esc(o.option_text || o.label || '')}</b><div class="bar" style="width:${pct}%"></div><small>${c} vote${c===1?'':'s'} • ${pct}%</small></div></label>`}).join('')+`<div class="notice">${total} of ${p.threshold||3} votes received ${total>=(p.threshold||3)?'🎉 quorum reached':''}</div>`}draw();document.querySelectorAll('input[name=opt]').forEach(r=>r.onchange=e=>selected=e.target.value); $('pollTranslateBtn').onclick=()=>openTranslatePanel('pollMount');
+  $('pollMount').innerHTML=`<div class="poll-card"><div class="poll-head"><div style="font-size:42px">${iconHTML(p.title+' '+p.question)}</div><h2>${p.title}</h2><p>${p.question}</p><small>${p.location||''} ${p.start_at?' • '+formatFriendlyDate(new Date(p.start_at))+' '+formatTime12(new Date(p.start_at)):''}</small></div><div class="poll-body"><p>${p.description||''}</p><div id="voteChoices"></div><input id="voterName" placeholder="Your name"><input id="voterEmail" placeholder="Your email"><div class="actions"><button class="btn" id="voteNow">${data.my_vote?'Update my vote':'Cast my vote'}</button><button class="btn secondary" id="gcal">Google Calendar</button><button class="btn secondary" id="ocal">Outlook</button></div><div id="voteMsg"></div></div></div>`;
+  mountTranslateBar('pollMount');
+  function draw(){document.getElementById('voteChoices').innerHTML=enriched.map(o=>{const c=voteMap[o.id]||0;const pct=total?Math.round(c/total*100):0;return `<label class="choice vote-option"><input type="radio" name="opt" value="${o.id}" ${selected===o.id?'checked':''}><span class="icon-badge">${iconHTMLFromResult(o.visual)}</span><div class="choice-content"><b>${esc(o.option_text || o.label || '')}</b><div class="bar" style="width:${pct}%"></div><small>${c} vote${c===1?'':'s'} • ${pct}%</small></div></label>`}).join('')+`<div class="notice">${total} of ${p.threshold||3} votes received ${total>=(p.threshold||3)?'🎉 quorum reached':''}</div>`}draw();document.querySelectorAll('input[name=opt]').forEach(r=>r.onchange=e=>selected=e.target.value); 
   $('voteNow').onclick=async()=>{
     if(!selected){alert('Choose an option first');return}
     const btn=$('voteNow'); btn.disabled=true; btn.textContent='Saving vote…';
