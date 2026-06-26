@@ -1,21 +1,23 @@
-# miPlanr Events & Polls v4.0
+# miPlanr Events & Polls v4.1
 
-Production-style starter for the miPlanr Events & Polls module.
+This fixes the v4 deployment issue caused by Supabase realtime requiring the `ws` package in Netlify Node 18.
 
-## Includes
-- Event + poll creator wizard
-- One invite token = one editable vote
-- Supabase schema upgrade
-- Resend email invitations and quorum notifications
-- WhatsApp sharing
-- Google/Outlook calendar links with location
-- Smart icons and category defaults
-- Translation-ready endpoint
-- Google Sites embed snippet
+Included:
+- One invite = one editable vote
+- Location passed to Google/Outlook Calendar
+- Smart defaults for date/time
+- Smart icons
+- Preview button
+- Translate button for title/question/description/options
+- Supabase schema
+- Resend email invites
+- Google Sites embed file
 
-## Required Netlify variables
+Required Netlify variables:
 - SUPABASE_URL
 - SUPABASE_SERVICE_ROLE_KEY
 - RESEND_API_KEY
-- OPENAI_API_KEY optional for AI translation/enrichment
-- GOOGLE_MAPS_API_KEY optional for future place autocomplete/maps
+
+Optional:
+- OPENAI_API_KEY for translation
+- OPENAI_MODEL if you want to override the default translation model
