@@ -37,3 +37,8 @@ Free-first smart event polling with:
 
 
 V6.4 fixes: uses real flag images for country options, adds date picker fields, and adds Supabase unique vote constraints so one invitation/email updates the existing vote instead of creating duplicates.
+
+
+## v6.6 update
+- Fixed vote casting on older Supabase schemas by removing the ON CONFLICT dependency.
+- Expanded smart icons for rugby teams/nicknames, global football clubs, NFL teams, cricket teams and beverages.

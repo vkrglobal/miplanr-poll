@@ -140,3 +140,9 @@ begin
   end if;
 exception when duplicate_table then null; when unique_violation then null;
 end $$;
+
+
+-- v6.6 voting safety: supports projects where older unique constraints were not applied.
+-- cast-vote.js now updates/inserts votes safely without depending on ON CONFLICT.
+create index if not exists idx_votes_poll_invite_lookup on public.votes(poll_id, invite_token);
+create index if not exists idx_votes_poll_email_lookup on public.votes(poll_id, voter_email);
