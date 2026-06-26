@@ -29,3 +29,9 @@
 .flag-icon{width:34px;height:24px;object-fit:cover;border-radius:5px;box-shadow:0 1px 4px rgba(10,26,77,.14);display:inline-block;vertical-align:middle}
 .icon-badge{display:inline-flex;align-items:center;justify-content:center;overflow:hidden}
 input[type="date"]{appearance:auto;-webkit-appearance:auto;cursor:pointer}
+
+/* v6.9 translate panel */
+.translate-panel{background:#f2fbff;border-color:#cfefff;color:var(--navy)}
+.translate-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+.translate-row select{max-width:260px;background:#fff}
+.translate-panel small{display:block;color:var(--muted);line-height:1.35}

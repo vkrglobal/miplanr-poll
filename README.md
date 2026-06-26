@@ -1,9 +1,8 @@
-# miPlanr Poll v6.7 voting refresh fix
+# miPlanr Poll v6.8
 
-This version fixes the Cast my vote display issue. After a vote is saved, the poll immediately fetches the latest results from Supabase and redraws the vote totals.
-
-Also includes the v6.6 expanded icon range for sports teams, countries, football, rugby, NFL, cricket and beverages.
-
-Deployment: upload the folder contents to Netlify, then hard refresh the browser with Ctrl+F5.
-
-Important: if an older Supabase project is being used, run the included `supabase/schema.sql` once in Supabase SQL Editor to ensure all voting columns/indexes exist.
+Fixes included:
+- Invite emails now report whether Resend actually sent them.
+- If Resend is not configured, the app shows invite links plus a mailto fallback for each invitee.
+- Set Netlify environment variables to send emails automatically: `RESEND_API_KEY` and optional `RESEND_FROM_EMAIL`.
+- Expanded icons: all NFL teams/nicknames, top netball teams, more football clubs, rugby/cricket/beverages.
+- Existing vote refresh, calendar date/time/duration and location fixes retained.
