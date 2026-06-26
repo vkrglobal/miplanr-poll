@@ -33,8 +33,12 @@ async function sb(path, options = {}) {
     }
   });
   const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!res.ok) throw new Error(JSON.stringify(data));
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+  if (!res.ok) {
+    const message = typeof data === 'string' ? data : (data?.message || JSON.stringify(data));
+    throw new Error(message);
+  }
   return data;
 }
 

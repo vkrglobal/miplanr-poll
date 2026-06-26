@@ -1,7 +1,1 @@
-{
-  "name": "miplanr-poll-v2",
-  "version": "2.1.0",
-  "private": true,
-  "description": "miPlanr Poll 2.0 core with 2.1 integration-ready buttons",
-  "engines": { "node": ">=18" }
-}
+{"scripts":{"test":"node --check netlify/functions/create-poll.js && node --check netlify/functions/get-poll.js && node --check netlify/functions/vote.js && node --check netlify/functions/send-invites.js"},"dependencies":{}}

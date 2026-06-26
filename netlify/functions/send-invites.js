@@ -1,46 +1,54 @@
-const { json, cleanEmail, safeArray } = require('./_utils');
+const { json } = require('./_supabase');
+
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return json(200, {});
   if (event.httpMethod !== 'POST') return json(405, { error: 'Use POST' });
+
   try {
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
-    if (!RESEND_API_KEY) return json(200, { ok: false, message: 'RESEND_API_KEY not set yet. WhatsApp sharing still works.' });
-    const body = JSON.parse(event.body || '{}');
-    const recipients = safeArray(body.recipients).map(cleanEmail).filter(Boolean);
-    if (!recipients.length) return json(200, { ok: false, message: 'No email recipients found.' });
-    const pollUrl = body.url || 'https://miplanr.com';
-    const question = body.question || 'miPlanr poll';
-    const deadline = body.deadline ? `<p style="color:#64748b">Closes: <strong>${body.deadline}</strong></p>` : '';
-    const html = `
-      <div style="font-family:Arial,sans-serif;max-width:620px;margin:auto;background:#f4f7fc;padding:28px">
-        <div style="background:#0A1A4D;color:white;padding:22px;border-radius:16px 16px 0 0">
-          <h1 style="margin:0;font-size:24px">miPlanr Poll</h1>
-          <p style="margin:6px 0 0;color:#9bdcff">Dream • Plan • Soar</p>
-        </div>
-        <div style="background:white;padding:26px;border-radius:0 0 16px 16px">
-          <p>Hi,</p>
-          <p><strong>${body.creator || 'Someone'}</strong> has invited you to vote on:</p>
-          <h2 style="color:#0A1A4D">${question}</h2>
-          ${deadline}
-          <p><a href="${pollUrl}" style="display:inline-block;background:#0072FF;color:white;text-decoration:none;padding:14px 22px;border-radius:10px;font-weight:bold">Vote now</a></p>
-          <p style="font-size:13px;color:#64748b">Or copy this link:<br><a href="${pollUrl}">${pollUrl}</a></p>
-        </div>
-      </div>`;
+    if (!RESEND_API_KEY) return json(200, { ok: false, message: 'RESEND_API_KEY is not set yet. WhatsApp sharing still works.' });
 
-    const sends = await Promise.all(recipients.map(to => fetch('https://api.resend.com/emails', {
+    const body = JSON.parse(event.body || '{}');
+    const emails = (body.recipients || []).map(x => String(x).trim()).filter(x => x.includes('@'));
+    if (!emails.length) return json(200, { ok: false, message: 'No email recipients found.' });
+
+    const question = escapeHtml(body.question || 'miPlanr poll');
+    const creator = escapeHtml(body.creator || 'Someone');
+    const deadline = escapeHtml(body.deadline || 'soon');
+    const url = String(body.url || '');
+
+    const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { authorization: `Bearer ${RESEND_API_KEY}`, 'content-type': 'application/json' },
       body: JSON.stringify({
         from: 'miPlanr <poll@mail.miplanr.com>',
-        to,
-        subject: body.subject || `Please vote: ${question}`,
-        html
+        to: emails,
+        subject: body.subject || `${creator} invited you to vote on a miPlanr poll`,
+        html: `
+          <div style="font-family:Arial,sans-serif;background:#F4F7FC;padding:28px;color:#0A1A4D">
+            <div style="max-width:560px;margin:auto;background:#fff;border-radius:18px;overflow:hidden;border:1px solid #E2E8F4">
+              <div style="background:#0A1A4D;color:white;padding:24px">
+                <div style="font-size:24px;font-weight:800;color:#00C6FF">miPlanr</div>
+                <p style="margin:8px 0 0;color:#D9E5FF">Dream • Plan • Soar</p>
+              </div>
+              <div style="padding:28px">
+                <p style="font-size:16px;margin-top:0"><strong>${creator}</strong> invited you to vote on:</p>
+                <h1 style="font-size:24px;line-height:1.25;margin:0 0 12px">${question}</h1>
+                <p style="color:#6B7A99">Poll closes: ${deadline}</p>
+                <p><a href="${url}" style="display:inline-block;background:#0072FF;color:#fff;text-decoration:none;padding:14px 22px;border-radius:12px;font-weight:800">Vote now</a></p>
+                <p style="font-size:13px;color:#6B7A99;word-break:break-all">${url}</p>
+              </div>
+            </div>
+          </div>`
       })
-    }).then(async res => ({ to, ok: res.ok, status: res.status, data: await res.json().catch(() => ({})) }))));
+    });
 
-    const failed = sends.filter(x => !x.ok);
-    return json(failed.length ? 207 : 200, { ok: failed.length === 0, results: sends });
+    const data = await res.json().catch(() => ({}));
+    return json(res.ok ? 200 : 500, { ok: res.ok, ...data });
   } catch (e) {
     return json(500, { error: e.message });
   }
