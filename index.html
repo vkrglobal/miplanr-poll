@@ -1,87 +1,34 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>miPlanr Poll Creator</title>
-<style>
-:root{--navy:#0A1A4D;--blue:#0072FF;--cyan:#00C6FF;--teal:#00BFA5;--pink:#EC2AA7;--off:#F4F7FC;--border:#E2E8F4;--text:#0A1A4D;--muted:#6B7A99;--white:#fff;--shadow:0 10px 35px rgba(10,26,77,.12)}
-*{box-sizing:border-box}body{margin:0;font-family:Segoe UI,system-ui,Arial,sans-serif;background:var(--off);color:var(--text)}.topbar{background:var(--navy);color:white;padding:16px 24px;border-bottom:3px solid var(--blue);display:flex;justify-content:space-between;align-items:center}.brand{font-weight:800;font-size:24px}.tag{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#b9c5dd}.wrap{max-width:900px;margin:34px auto;padding:0 18px}.card{background:white;border:1px solid var(--border);border-radius:18px;padding:26px;box-shadow:var(--shadow);margin:18px 0}h1{font-size:34px;margin:0 0 8px}.muted{color:var(--muted)}label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:700;margin:16px 0 8px}input,textarea{width:100%;border:1.5px solid var(--border);border-radius:12px;padding:14px;font:inherit;color:var(--text)}textarea{min-height:95px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.option-row{display:flex;gap:8px;margin:8px 0}.option-row input{flex:1}.small-btn{border:1px solid var(--border);background:white;border-radius:10px;padding:8px 12px;cursor:pointer}.btn{border:0;border-radius:12px;padding:14px 18px;font-weight:800;cursor:pointer;background:linear-gradient(90deg,var(--blue),var(--cyan));color:white}.btn.secondary{background:var(--navy)}.btn.whatsapp{background:#25D366;color:#071b10}.actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.result{background:#07164a;color:white;border-radius:14px;padding:16px;word-break:break-word}.error{background:#ffe9f7;color:#8a0f5b;border:1px solid #ffc2e8;border-radius:12px;padding:12px;margin-top:12px}.success{background:#e6faf7;color:#005f53;border:1px solid #baf0e9;border-radius:12px;padding:12px;margin-top:12px}@media(max-width:700px){.grid{grid-template-columns:1fr}.actions{flex-direction:column;align-items:stretch}.btn{width:100%}}
-</style>
-</head>
-<body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>miPlanr Poll Creator</title><link rel="stylesheet" href="/assets/app.css"></head><body>
 <header class="topbar"><div class="brand">miPlanr</div><div class="tag">Poll & Schedule</div></header>
 <main class="wrap">
-  <h1>Create a new poll</h1>
-  <p class="muted">Create a shareable poll link. Poll data is stored in Supabase, so links stay short and votes persist.</p>
-  <section class="card">
-    <label>Poll question</label>
-    <input id="question" value="Where should we go on holiday?" />
-    <div class="grid">
-      <div><label>Event title</label><input id="eventTitle" value="Sims July 2026 Holiday" /></div>
-      <div><label>Your name</label><input id="creatorName" value="Josh Sim" /></div>
-    </div>
-    <div class="grid">
-      <div><label>Closing date / note</label><input id="deadline" value="2 Jul" /></div>
-      <div><label>Votes needed</label><input id="threshold" type="number" min="1" value="3" /></div>
-    </div>
+  <section class="hero"><h1>Create a new poll</h1><p>Version 2.0 core polling + Version 2.1 integration-ready sharing. Polls are saved in Supabase and votes persist.</p></section>
+  <form id="pollForm">
+    <section class="card"><div class="section-label">Poll details</div>
+      <div class="field"><label>Poll question</label><input id="question" required placeholder="Where should we go for July 2026?" /></div>
+      <div class="grid"><div class="field"><label>Event title</label><input id="eventTitle" placeholder="Sims July 2026 Holiday" /></div><div class="field"><label>Your name</label><input id="creator" value="Josh Sim" /></div></div>
+      <div class="grid"><div class="field"><label>Closing date / note</label><input id="deadline" placeholder="2 Jul" /></div><div class="field"><label>Votes needed</label><input id="threshold" type="number" min="1" value="3" /></div></div>
+    </section>
+    <section class="card"><div class="section-label">Options</div><div id="options"></div><button type="button" class="mini" onclick="addOption('')">+ Add option</button></section>
+    <section class="card"><div class="section-label">Invite emails</div><p style="color:var(--muted);margin-top:0">Emails are sent by Resend if <strong>RESEND_API_KEY</strong> is set in Netlify.</p><div id="emails"></div><button type="button" class="mini" onclick="addEmail('')">+ Add email</button></section>
+    <button class="btn" id="createBtn" type="submit">Create poll</button>
+  </form>
+  <section id="success" class="card success"><h2>Poll created ✅</h2><p id="emailStatus" class="notice"></p><div class="section-label">Share poll link</div><div id="shareUrl" class="sharebox"></div><div class="actions"><button class="btn secondary" onclick="copyLink()">Copy link</button><a id="waBtn" class="btn whatsapp" target="_blank">Share via WhatsApp</a><a id="openBtn" class="btn dark" target="_blank">Open poll</a><button class="btn secondary" onclick="sendInvitesAgain()">Send emails again</button></div>
+    <h3>2.1 integrations</h3><p style="color:var(--muted)">These buttons are integration-ready placeholders. They record interest now; direct API sync comes in the next stage.</p><div id="integrations" class="integration-grid"></div>
   </section>
-  <section class="card">
-    <label>Options</label>
-    <div id="options"></div>
-    <button class="small-btn" onclick="addOption('')">+ Add option</button>
-  </section>
-  <section class="card">
-    <label>Participants (names or emails, one per line)</label>
-    <textarea id="participants">vkrglobal@gmail.com
-josh@vkrglobal.net</textarea>
-    <p class="muted">Email sending works after you add RESEND_API_KEY in Netlify. WhatsApp sharing works immediately.</p>
-  </section>
-  <div class="actions">
-    <button class="btn" onclick="createPoll()">Create poll</button>
-    <a class="small-btn" href="guide.html">Open guide</a>
-  </div>
-  <div id="msg"></div>
-  <section id="created" class="card" style="display:none">
-    <label>Your poll link</label>
-    <div class="result" id="pollLink"></div>
-    <div class="actions" style="margin-top:14px">
-      <button class="btn secondary" onclick="copyLink()">Copy link</button>
-      <button class="btn whatsapp" onclick="shareWhatsApp()">Share on WhatsApp</button>
-      <button class="small-btn" onclick="sendInvites()">Send email invites</button>
-      <a id="openPoll" class="small-btn" target="_blank">Open poll</a>
-    </div>
-  </section>
-</main>
+</main><div id="toast" class="toast"></div>
 <script>
-let lastUrl = '';
-function addOption(value=''){
-  const row=document.createElement('div'); row.className='option-row';
-  row.innerHTML=`<input value="${value.replaceAll('"','&quot;')}" placeholder="Option"><button class="small-btn" onclick="this.parentElement.remove()">×</button>`;
-  document.getElementById('options').appendChild(row);
-}
-['Turkey','New Zealand','Other'].forEach(addOption);
-function show(type,text){document.getElementById('msg').innerHTML=`<div class="${type}">${text}</div>`}
-async function createPoll(){
-  document.getElementById('msg').innerHTML='';
-  const options=[...document.querySelectorAll('#options input')].map(i=>i.value.trim()).filter(Boolean);
-  const participants=document.getElementById('participants').value.split(/\n|,/).map(x=>x.trim()).filter(Boolean);
-  const payload={question:question.value.trim(),eventTitle:eventTitle.value.trim(),creatorName:creatorName.value.trim(),deadline:deadline.value.trim(),threshold:Number(threshold.value||1),options,participants};
-  try{
-    const r=await fetch('/.netlify/functions/create-poll',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
-    const data=await r.json(); if(!r.ok) throw new Error(data.error||'Could not create poll');
-    lastUrl=location.origin+data.url;
-    pollLink.textContent=lastUrl; openPoll.href=lastUrl; created.style.display='block';
-    show('success','Poll created. You can now copy or share the link.');
-  }catch(e){show('error',e.message)}
-}
-function copyLink(){navigator.clipboard.writeText(lastUrl);show('success','Link copied.');}
-function shareWhatsApp(){window.open('https://wa.me/?text='+encodeURIComponent('Please vote in this miPlanr poll: '+lastUrl),'_blank');}
-async function sendInvites(){
-  const recipients=participants.value.split(/\n|,/).map(x=>x.trim()).filter(Boolean);
-  const r=await fetch('/.netlify/functions/send-invites',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({recipients,url:lastUrl,subject:'Please vote in this miPlanr poll'})});
-  const data=await r.json(); show(data.id?'success':'error',data.message||'Email request completed.');
-}
-</script>
-</body>
-</html>
+const optionBox=document.getElementById('options'), emailBox=document.getElementById('emails');let lastPoll=null,lastUrl='';
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+function addOption(v=''){const d=document.createElement('div');d.className='option-row';d.innerHTML=`<input class="opt" placeholder="Option" value="${v.replaceAll('"','&quot;')}"><button type="button" class="mini" onclick="this.parentElement.remove()">×</button>`;optionBox.appendChild(d)}
+function addEmail(v=''){const d=document.createElement('div');d.className='email-row';d.innerHTML=`<input class="email" type="email" placeholder="name@email.com" value="${v.replaceAll('"','&quot;')}"><button type="button" class="mini" onclick="this.parentElement.remove()">×</button>`;emailBox.appendChild(d)}
+['Greece','Albania','Other'].forEach(addOption);addEmail('');
+function values(sel){return [...document.querySelectorAll(sel)].map(i=>i.value.trim()).filter(Boolean)}
+async function api(path,body){const r=await fetch('/.netlify/functions/'+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Request failed');return d}
+async function sendInvites(url, poll, recipients){return api('send-invites',{url,recipients,question:poll.question,creator:poll.creator,deadline:poll.deadline,subject:'Please vote: '+poll.question,message:'Please vote in this miPlanr poll.'})}
+async function sendInvitesAgain(){if(!lastPoll)return;const recipients=values('.email');const r=await sendInvites(lastUrl,lastPoll,recipients);document.getElementById('emailStatus').textContent=r.ok?'Emails sent ✅':(r.message||'Email sending returned a warning.');toast('Email invite attempt complete')}
+document.getElementById('pollForm').addEventListener('submit',async e=>{e.preventDefault();const btn=document.getElementById('createBtn');btn.disabled=true;btn.textContent='Creating...';try{const payload={question:question.value,event_title:eventTitle.value,creator:creator.value,deadline:deadline.value,threshold:threshold.value,options:values('.opt'),participants:values('.email')};const created=await api('create-poll',payload);lastPoll=created.poll;lastUrl=location.origin+created.url;let emailMsg='No email recipients entered. WhatsApp and copy link are ready.';if(payload.participants.length){const sent=await sendInvites(lastUrl,lastPoll,payload.participants);emailMsg=sent.ok?'Email invitations sent ✅':(sent.message||'Email invitation warning. Check Resend logs.')}document.getElementById('shareUrl').textContent=lastUrl;document.getElementById('waBtn').href='https://wa.me/?text='+encodeURIComponent('Please vote in my miPlanr poll: '+lastUrl);document.getElementById('openBtn').href=lastUrl;document.getElementById('emailStatus').textContent=emailMsg;document.getElementById('success').classList.add('show');document.getElementById('success').scrollIntoView({behavior:'smooth'});renderIntegrations();}catch(err){alert(err.message)}finally{btn.disabled=false;btn.textContent='Create poll'}});
+function copyLink(){navigator.clipboard.writeText(lastUrl);toast('Poll link copied')}
+const ints=[['Google Calendar','📅','Create event link'],['Outlook / Teams','🪟','Create event link'],['ChurchSuite','⛪','Requested'],['iSAMS','🏫','Requested'],['EduLink','📚','Requested'],['Google Classroom','🎓','Requested'],['Salesforce','☁️','Requested'],['HubSpot','🔶','Requested'],['Teamo','👥','Requested'],['SportsEngine','⚽','Requested']];
+function renderIntegrations(){integrations.innerHTML=ints.map(x=>`<button class="integration" onclick="requestIntegration('${x[0]}')"><span>${x[1]}</span>${x[0]}<small>${x[2]}</small></button>`).join('')}
+async function requestIntegration(name){try{await api('request-integration',{poll_id:lastPoll?.id,integration_name:name,requester_email:values('.email')[0]||''});toast(name+' integration requested')}catch(e){toast('Request saved locally for '+name)}}
+</script></body></html>

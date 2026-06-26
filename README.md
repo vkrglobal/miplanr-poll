@@ -1,29 +1,33 @@
-# miPlanr Poll v2 Full
+# miPlanr Poll 2.0 + 2.1
 
-Database-backed poll MVP for Netlify + Supabase.
+## 2.0 Polling core
+- Supabase-backed polls
+- Real persistent votes only
+- Percentages based on total votes per option
+- Threshold progress
+- WhatsApp sharing
+- Resend email invitations
+- Google Calendar / Outlook event links
 
-## Includes
+## 2.1 Integration-ready layer
+- ChurchSuite
+- iSAMS
+- EduLink
+- Google Classroom
+- Salesforce
+- HubSpot
+- Teamo
+- SportsEngine
 
-- `index.html` — create polls
-- `poll.html` — vote on polls
-- `netlify/functions/create-poll.js` — creates polls in Supabase
-- `netlify/functions/get-poll.js` — loads polls and vote counts
-- `netlify/functions/vote.js` — records votes
-- `netlify/functions/send-invites.js` — Resend-ready email invite function
-- `supabase/schema.sql` — database schema
-- `guide.html` — dummies setup guide
+These initially record integration requests. Direct OAuth/API sync should come after the polling MVP is stable.
 
-## Environment variables in Netlify
+## Required Netlify environment variables
+- SUPABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY
+- RESEND_API_KEY
 
-Required:
-
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-
-Optional:
-
-- `RESEND_API_KEY`
-
-## WhatsApp
-
-One-click WhatsApp sharing works immediately. Automatic sending requires WhatsApp Business API later.
+## Setup
+1. Run `supabase/schema.sql` in Supabase.
+2. Add environment variables in Netlify.
+3. Commit and push all files.
+4. Test `/index.html`.
