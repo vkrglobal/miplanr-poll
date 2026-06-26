@@ -62,3 +62,30 @@ create index if not exists idx_polls_slug on public.polls(slug);
 create index if not exists idx_options_poll on public.poll_options(poll_id);
 create index if not exists idx_votes_poll on public.votes(poll_id);
 create index if not exists idx_participants_token on public.participants(invite_token);
+
+
+-- v6.1 safety upgrade: fix old constraints and support smarter locations
+alter table public.poll_options add column if not exists label text;
+update public.poll_options set label = coalesce(label, option_text, '') where label is null;
+alter table public.poll_options alter column label drop not null;
+alter table public.poll_options alter column option_text drop not null;
+alter table public.polls add column if not exists creator_name text;
+alter table public.polls add column if not exists creator_email text;
+alter table public.polls add column if not exists icon text default '✨';
+alter table public.polls add column if not exists category text;
+alter table public.polls add column if not exists address_line1 text;
+alter table public.polls add column if not exists city text;
+alter table public.polls add column if not exists postcode text;
+alter table public.polls add column if not exists place_label text;
+alter table public.polls add column if not exists place_lat double precision;
+alter table public.polls add column if not exists place_lon double precision;
+alter table public.polls add column if not exists maps_url text;
+alter table public.polls add column if not exists allow_vote_edit boolean default true;
+alter table public.polls add column if not exists notify_on_quorum boolean default true;
+alter table public.participants add column if not exists name_or_email text;
+alter table public.participants alter column name_or_email drop not null;
+alter table public.votes add column if not exists participant_id uuid;
+alter table public.votes add column if not exists invite_token text;
+alter table public.votes add column if not exists voter_name text;
+alter table public.votes add column if not exists voter_email text;
+alter table public.votes add column if not exists updated_at timestamptz default now();

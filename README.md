@@ -20,3 +20,6 @@ Free-first production reset for miPlanr Events & Polls.
 ## Optional variables
 - GOOGLE_MAPS_API_KEY for premium location autocomplete later
 - OPENAI_API_KEY for AI translation/localisation later
+
+
+V6.1 fixes: fixes poll_options.label errors, adds NZ/UK country aliases, improves location guidance and selected place metadata. Run supabase/schema.sql again after deploying.
