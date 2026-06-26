@@ -115,7 +115,33 @@ async function initPoll(){
   const params=new URLSearchParams(location.search);const slug=params.get('slug')||location.pathname.split('/').pop();const invite=params.get('invite')||'';const res=await fetch(api('get-poll')+'?slug='+encodeURIComponent(slug)+'&invite='+encodeURIComponent(invite));const data=await res.json();if(!res.ok){$('pollMount').innerHTML='<p>Could not load poll.</p>';return}const p=data.poll;const total=data.votes.reduce((a,v)=>a+Number(v.count),0);const voteMap=Object.fromEntries(data.votes.map(v=>[v.option_id,Number(v.count)]));const opts=p.options||[];const enriched=opts.map(o=>({ ...o, visual: miPlanrVisual.iconFor(o.option_text,p.question)}));let selected=data.my_vote?.option_id||'';
   $('pollMount').innerHTML=`<div class="poll-card"><div class="poll-head"><div style="font-size:42px">${iconHTML(p.title+' '+p.question)}</div><h2>${p.title}</h2><p>${p.question}</p><small>${p.location||''} ${p.start_at?' • '+formatFriendlyDate(new Date(p.start_at))+' '+formatTime12(new Date(p.start_at)):''}</small></div><div class="poll-body"><p>${p.description||''}</p><div id="voteChoices"></div><input id="voterName" placeholder="Your name"><input id="voterEmail" placeholder="Your email"><div class="actions"><button class="btn" id="voteNow">${data.my_vote?'Update my vote':'Cast my vote'}</button><button class="btn secondary" id="gcal">Google Calendar</button><button class="btn secondary" id="ocal">Outlook</button></div><div id="voteMsg"></div></div></div>`;
   function draw(){document.getElementById('voteChoices').innerHTML=enriched.map(o=>{const c=voteMap[o.id]||0;const pct=total?Math.round(c/total*100):0;return `<label class="choice vote-option"><input type="radio" name="opt" value="${o.id}" ${selected===o.id?'checked':''}><span class="icon-badge">${iconHTMLFromResult(o.visual)}</span><div class="choice-content"><b>${esc(o.option_text || o.label || '')}</b><div class="bar" style="width:${pct}%"></div><small>${c} vote${c===1?'':'s'} • ${pct}%</small></div></label>`}).join('')+`<div class="notice">${total} of ${p.threshold||3} votes received ${total>=(p.threshold||3)?'🎉 quorum reached':''}</div>`}draw();document.querySelectorAll('input[name=opt]').forEach(r=>r.onchange=e=>selected=e.target.value);
-  $('voteNow').onclick=async()=>{if(!selected){alert('Choose an option first');return}const rr=await fetch(api('cast-vote'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug,invite_token:invite,option_id:selected,voter_name:$('voterName').value,voter_email:$('voterEmail').value})});const jd=await rr.json();$('voteMsg').innerHTML='<div class="notice">'+(rr.ok?'✅ Vote saved. You can edit it before the deadline using the same invite link.':'Error: '+jd.error)+'</div>';};
+  $('voteNow').onclick=async()=>{
+    if(!selected){alert('Choose an option first');return}
+    const btn=$('voteNow'); btn.disabled=true; btn.textContent='Saving vote…';
+    try{
+      const rr=await fetch(api('cast-vote'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug,invite_token:invite,option_id:selected,voter_name:$('voterName').value,voter_email:$('voterEmail').value})});
+      let jd={}; try{jd=await rr.json()}catch(e){}
+      if(!rr.ok){$('voteMsg').innerHTML='<div class="notice">Error: '+(jd.error||'Vote could not be saved')+'</div>'; return;}
+      // Force the public results to refresh after Supabase saves the vote.
+      // This avoids the old issue where the database saved correctly but the screen still showed 0 votes.
+      $('voteMsg').innerHTML='<div class="notice">✅ Vote saved. Updating results…</div>';
+      const fresh=await fetch(api('get-poll')+'?slug='+encodeURIComponent(slug)+'&invite='+encodeURIComponent(invite)+'&t='+Date.now());
+      if(fresh.ok){
+        const latest=await fresh.json();
+        const latestTotal=latest.votes.reduce((a,v)=>a+Number(v.count),0);
+        const latestMap=Object.fromEntries(latest.votes.map(v=>[v.option_id,Number(v.count)]));
+        document.getElementById('voteChoices').innerHTML=enriched.map(o=>{const c=latestMap[o.id]||0;const pct=latestTotal?Math.round(c/latestTotal*100):0;return `<label class="choice vote-option"><input type="radio" name="opt" value="${o.id}" ${selected===o.id?'checked':''}><span class="icon-badge">${iconHTMLFromResult(o.visual)}</span><div class="choice-content"><b>${esc(o.option_text || o.label || '')}</b><div class="bar" style="width:${pct}%"></div><small>${c} vote${c===1?'':'s'} • ${pct}%</small></div></label>`}).join('')+`<div class="notice">${latestTotal} of ${p.threshold||3} votes received ${latestTotal>=(p.threshold||3)?'🎉 quorum reached':''}</div>`;
+        document.querySelectorAll('input[name=opt]').forEach(r=>r.onchange=e=>selected=e.target.value);
+        $('voteMsg').innerHTML='<div class="notice">✅ Vote saved and results updated.</div>';
+      } else {
+        location.reload();
+      }
+    }catch(e){
+      $('voteMsg').innerHTML='<div class="notice">Error: '+e.message+'</div>';
+    }finally{
+      btn.disabled=false; btn.textContent='Update my vote';
+    }
+  };
   function calUrl(provider){const text=encodeURIComponent(p.title);const details=encodeURIComponent((p.description||'')+'\nPoll: '+location.href);const loc=encodeURIComponent(p.location||p.place_label||'');const s=p.start_at?new Date(p.start_at):new Date();const e=p.end_at?new Date(p.end_at):new Date(s.getTime()+3600000);if(provider==='google')return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${loc}&dates=${calendarLocalStamp(s)}/${calendarLocalStamp(e)}`;return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${text}&body=${details}&location=${loc}&startdt=${encodeURIComponent(localIsoNoZone(s))}&enddt=${encodeURIComponent(localIsoNoZone(e))}`}$('gcal').onclick=()=>window.open(calUrl('google'),'_blank');$('ocal').onclick=()=>window.open(calUrl('outlook'),'_blank')
 }
 document.addEventListener('DOMContentLoaded',()=>{const page=document.body.dataset.page;if(page==='create')initCreate();if(page==='poll')initPoll()});
