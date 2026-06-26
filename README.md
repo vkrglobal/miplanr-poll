@@ -1,4 +1,4 @@
-# miPlanr Poll v6.4 Polished
+# miPlanr Poll v6.5 Polished
 
 Free-first smart event polling with:
 

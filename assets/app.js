@@ -33,6 +33,9 @@ function parseTime12(v, fallback='08:00'){
   return pad(Math.min(23,Math.max(0,h)))+':'+pad(Math.min(59,Math.max(0,mi)));
 }
 function toLocalInput(d){return dateISO(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())}
+function toOffsetDateTime(d){const off=-d.getTimezoneOffset();const sign=off>=0?'+':'-';const ah=Math.floor(Math.abs(off)/60),am=Math.abs(off)%60;return dateISO(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00'+sign+pad(ah)+':'+pad(am)}
+function calendarLocalStamp(d){return dateISO(d).replace(/-/g,'')+'T'+pad(d.getHours())+pad(d.getMinutes())+'00'}
+function localIsoNoZone(d){return dateISO(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00'}
 function setDateTimeParts(prefix,d){if($(prefix+'Date')){$(prefix+'Date').value=$(prefix+'Date').type==='date'?dateISO(d):formatFriendlyDate(d)}if($(prefix+'Time'))$(prefix+'Time').value=formatTime12(d)}
 function fromDateTimeParts(dateId,timeId,defaultTime='08:00'){
   const dd=parseFriendlyDate($(dateId)?.value||''); if(!dd) return null;
@@ -55,7 +58,7 @@ function syncHiddenDateTimes(){
   if(!e || e<=s){e=new Date(s.getTime()+durationMinutes()*60000); setDateTimeParts('end',e)}
   let d=fromDateTimeParts('deadlineDate','deadlineTime','17:00');
   if(!d){d=new Date(s.getTime()-24*3600000); if(d<now)d=new Date(now.getTime()+2*3600000); setDateTimeParts('deadline',d)}
-  $('start').value=toLocalInput(s); $('end').value=toLocalInput(e); $('deadline').value=toLocalInput(d); updateDateSummary();
+  $('start').value=toOffsetDateTime(s); $('end').value=toOffsetDateTime(e); $('deadline').value=toOffsetDateTime(d); updateDateSummary();
 }
 function smartTimes(){
   if(!$('start'))return; if(!$('startDate').value){const s=nextHalfHour(); setDateTimeParts('start',s); const e=new Date(s.getTime()+durationMinutes()*60000); setDateTimeParts('end',e); const d=new Date(Date.now()+2*3600000); setDateTimeParts('deadline',d)} syncHiddenDateTimes();
@@ -70,6 +73,8 @@ function applyQuickDate(kind){
   if(kind==='today'){s=new Date();s.setHours(8,0,0,0); if(s<now)s=nextHalfHour()}
   if(kind==='tomorrow'){s=new Date();s.setDate(s.getDate()+1);s.setHours(8,0,0,0)}
   if(kind==='next30'){s=nextHalfHour()}
+  if(kind==='custom'){s=fromDateTimeParts('startDate','startTime','08:00')||nextHalfHour()}
+  if($('startDateWrap')) $('startDateWrap').hidden = kind !== 'custom';
   setDateTimeParts('start',s); const e=new Date(s.getTime()+durationMinutes()*60000); setDateTimeParts('end',e); const d=new Date(s.getTime()-24*3600000); if(d<now)d.setTime(now.getTime()+2*3600000); setDateTimeParts('deadline',d); syncHiddenDateTimes(); renderPreview();
 }
 function optionRow(v=''){
@@ -86,10 +91,11 @@ function renderPreview(){
 async function suggestPlaces(q){if(!q||q.length<3)return [];try{const r=await fetch(api('place-suggest')+'?q='+encodeURIComponent(q));return await r.json()}catch(e){return[]}}
 function initCreate(){
   updateDurationControls(); smartTimes();
-  document.querySelectorAll('[data-quick]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-quick]').forEach(x=>x.classList.remove('active'));b.classList.add('active');applyQuickDate(b.dataset.quick)});
+  $('quickDate')?.addEventListener('change', e=>applyQuickDate(e.target.value));
+  applyQuickDate($('quickDate')?.value||'next30');
   $('durationUnit')?.addEventListener('change',()=>{updateDurationControls(); const s=fromDateTimeParts('startDate','startTime','08:00')||nextHalfHour(); const e=new Date(s.getTime()+durationMinutes()*60000); setDateTimeParts('end',e); syncHiddenDateTimes(); renderPreview()});
   $('durationSlider')?.addEventListener('input',()=>{updateDurationControls(); const s=fromDateTimeParts('startDate','startTime','08:00')||nextHalfHour(); const e=new Date(s.getTime()+durationMinutes()*60000); setDateTimeParts('end',e); syncHiddenDateTimes(); renderPreview()});
-  ['startDate','startTime','endDate','endTime','deadlineDate','deadlineTime'].forEach(id=>$(id)&&$(id).addEventListener('input',()=>{syncHiddenDateTimes();renderPreview()}));
+  ['startDate','startTime','endDate','endTime','deadlineDate','deadlineTime'].forEach(id=>$(id)&&$(id).addEventListener('input',()=>{if(id==='startDate' && $('quickDate')) $('quickDate').value='custom'; if($('startDateWrap')) $('startDateWrap').hidden = $('quickDate')?.value !== 'custom'; syncHiddenDateTimes();renderPreview()}));
   ['New Zealand','United Kingdom','Greece'].forEach(v=>$('options').appendChild(optionRow(v)));
   document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',renderPreview));
   $('addOption').onclick=()=>{$('options').appendChild(optionRow());renderPreview()}; $('previewBtn').onclick=renderPreview;
@@ -110,6 +116,6 @@ async function initPoll(){
   $('pollMount').innerHTML=`<div class="poll-card"><div class="poll-head"><div style="font-size:42px">${iconHTML(p.title+' '+p.question)}</div><h2>${p.title}</h2><p>${p.question}</p><small>${p.location||''} ${p.start_at?' • '+formatFriendlyDate(new Date(p.start_at))+' '+formatTime12(new Date(p.start_at)):''}</small></div><div class="poll-body"><p>${p.description||''}</p><div id="voteChoices"></div><input id="voterName" placeholder="Your name"><input id="voterEmail" placeholder="Your email"><div class="actions"><button class="btn" id="voteNow">${data.my_vote?'Update my vote':'Cast my vote'}</button><button class="btn secondary" id="gcal">Google Calendar</button><button class="btn secondary" id="ocal">Outlook</button></div><div id="voteMsg"></div></div></div>`;
   function draw(){document.getElementById('voteChoices').innerHTML=enriched.map(o=>{const c=voteMap[o.id]||0;const pct=total?Math.round(c/total*100):0;return `<label class="choice vote-option"><input type="radio" name="opt" value="${o.id}" ${selected===o.id?'checked':''}><span class="icon-badge">${iconHTMLFromResult(o.visual)}</span><div class="choice-content"><b>${esc(o.option_text || o.label || '')}</b><div class="bar" style="width:${pct}%"></div><small>${c} vote${c===1?'':'s'} • ${pct}%</small></div></label>`}).join('')+`<div class="notice">${total} of ${p.threshold||3} votes received ${total>=(p.threshold||3)?'🎉 quorum reached':''}</div>`}draw();document.querySelectorAll('input[name=opt]').forEach(r=>r.onchange=e=>selected=e.target.value);
   $('voteNow').onclick=async()=>{if(!selected){alert('Choose an option first');return}const rr=await fetch(api('cast-vote'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug,invite_token:invite,option_id:selected,voter_name:$('voterName').value,voter_email:$('voterEmail').value})});const jd=await rr.json();$('voteMsg').innerHTML='<div class="notice">'+(rr.ok?'✅ Vote saved. You can edit it before the deadline using the same invite link.':'Error: '+jd.error)+'</div>';};
-  function calUrl(provider){const text=encodeURIComponent(p.title);const details=encodeURIComponent((p.description||'')+'\nPoll: '+location.href);const loc=encodeURIComponent(p.location||'');const s=p.start_at?new Date(p.start_at):new Date();const e=p.end_at?new Date(p.end_at):new Date(s.getTime()+3600000);const fmt=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';if(provider==='google')return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${loc}&dates=${fmt(s)}/${fmt(e)}`;return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${text}&body=${details}&location=${loc}&startdt=${s.toISOString()}&enddt=${e.toISOString()}`}$('gcal').onclick=()=>window.open(calUrl('google'),'_blank');$('ocal').onclick=()=>window.open(calUrl('outlook'),'_blank')
+  function calUrl(provider){const text=encodeURIComponent(p.title);const details=encodeURIComponent((p.description||'')+'\nPoll: '+location.href);const loc=encodeURIComponent(p.location||p.place_label||'');const s=p.start_at?new Date(p.start_at):new Date();const e=p.end_at?new Date(p.end_at):new Date(s.getTime()+3600000);if(provider==='google')return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${loc}&dates=${calendarLocalStamp(s)}/${calendarLocalStamp(e)}`;return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${text}&body=${details}&location=${loc}&startdt=${encodeURIComponent(localIsoNoZone(s))}&enddt=${encodeURIComponent(localIsoNoZone(e))}`}$('gcal').onclick=()=>window.open(calUrl('google'),'_blank');$('ocal').onclick=()=>window.open(calUrl('outlook'),'_blank')
 }
 document.addEventListener('DOMContentLoaded',()=>{const page=document.body.dataset.page;if(page==='create')initCreate();if(page==='poll')initPoll()});
