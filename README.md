@@ -29,3 +29,6 @@ This package is a clean reset to avoid mixed-version issues.
 4. Commit and push with GitHub Desktop.
 5. Wait for Netlify Published.
 6. Test with a fresh poll.
+
+
+Google Places autocomplete: add Netlify environment variable GOOGLE_MAPS_API_KEY to enable real address suggestions while typing locations. Restrict the key in Google Cloud for security.
