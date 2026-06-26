@@ -24,3 +24,8 @@
 .vote-option{align-items:center;text-align:left;gap:16px}
 .choice-content{flex:1;text-align:left}
 .choice-content b{display:block;margin-bottom:8px}
+
+/* v6.4 visual fixes */
+.flag-icon{width:34px;height:24px;object-fit:cover;border-radius:5px;box-shadow:0 1px 4px rgba(10,26,77,.14);display:inline-block;vertical-align:middle}
+.icon-badge{display:inline-flex;align-items:center;justify-content:center;overflow:hidden}
+input[type="date"]{appearance:auto;-webkit-appearance:auto;cursor:pointer}

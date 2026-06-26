@@ -1,4 +1,4 @@
-# miPlanr Poll v6.3 Polished
+# miPlanr Poll v6.4 Polished
 
 Free-first smart event polling with:
 
@@ -34,3 +34,6 @@ Free-first smart event polling with:
 
 - `OPENAI_API_KEY` for future AI translation/localisation
 - `GOOGLE_MAPS_API_KEY` for premium Google Places later
+
+
+V6.4 fixes: uses real flag images for country options, adds date picker fields, and adds Supabase unique vote constraints so one invitation/email updates the existing vote instead of creating duplicates.

@@ -1,4 +1,15 @@
 const $ = id => document.getElementById(id);
+
+function esc(s){return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function iconHTMLFromResult(r){
+  if(!r) return '✨';
+  if(r.type === 'country' && r.label){
+    const code = String(r.label).toLowerCase();
+    return `<img class="flag-icon" src="https://flagcdn.com/w40/${code}.png" srcset="https://flagcdn.com/w80/${code}.png 2x" alt="${esc(r.label)} flag">`;
+  }
+  return esc(r.icon || '✨');
+}
+function iconHTML(text, context=''){ return iconHTMLFromResult(miPlanrVisual.iconFor(text, context)); }
 const api = path => '/.netlify/functions/' + path;
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function pad(n){return String(n).padStart(2,'0')}
@@ -22,7 +33,7 @@ function parseTime12(v, fallback='08:00'){
   return pad(Math.min(23,Math.max(0,h)))+':'+pad(Math.min(59,Math.max(0,mi)));
 }
 function toLocalInput(d){return dateISO(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())}
-function setDateTimeParts(prefix,d){if($(prefix+'Date'))$(prefix+'Date').value=formatFriendlyDate(d);if($(prefix+'Time'))$(prefix+'Time').value=formatTime12(d)}
+function setDateTimeParts(prefix,d){if($(prefix+'Date')){$(prefix+'Date').value=$(prefix+'Date').type==='date'?dateISO(d):formatFriendlyDate(d)}if($(prefix+'Time'))$(prefix+'Time').value=formatTime12(d)}
 function fromDateTimeParts(dateId,timeId,defaultTime='08:00'){
   const dd=parseFriendlyDate($(dateId)?.value||''); if(!dd) return null;
   const t=parseTime12($(timeId)?.value||'', defaultTime); return new Date(dateISO(dd)+'T'+t);
@@ -63,14 +74,14 @@ function applyQuickDate(kind){
 }
 function optionRow(v=''){
   const row=document.createElement('div');row.className='option-row';row.innerHTML=`<span class="icon-badge">✨</span><input class="opt" placeholder="e.g. New Zealand, NZ, UK, Greece, Tomato, Mango, Football" value="${String(v).replace(/"/g,'&quot;')}"><button type="button" class="btn secondary">×</button>`;
-  const refresh=()=>{const r=miPlanrVisual.iconFor(row.querySelector('input').value,$('question')?.value);row.querySelector('.icon-badge').textContent=r.icon;};
+  const refresh=()=>{const r=miPlanrVisual.iconFor(row.querySelector('input').value,$('question')?.value);row.querySelector('.icon-badge').innerHTML=iconHTMLFromResult(r);};
   row.querySelector('button').onclick=()=>{row.remove();renderPreview()}; row.querySelector('input').oninput=()=>{refresh();renderPreview()}; refresh(); return row;
 }
 function renderPreview(){
   if(!$('pTitle'))return; syncHiddenDateTimes();
   const title=$('title').value||'Your event title';const q=$('question').value||'Your question will appear here';const loc=$('location').value||'Location';const st=$('start').value?new Date($('start').value):null;
-  $('pTitle').textContent=title;$('pQuestion').textContent=q;$('pMeta').textContent=`${loc} • ${st?formatFriendlyDate(st)+' '+formatTime12(st):'Date/time'}`;$('pIcon').textContent=miPlanrVisual.iconFor(title+' '+q).icon;
-  const opts=[...document.querySelectorAll('.opt')].map(i=>i.value).filter(Boolean);$('pOptions').innerHTML=(opts.length?miPlanrVisual.enrichOptions(opts,q):[{icon:'✨',label:'Option preview'}]).map(o=>`<div class="choice"><span class="icon-badge">${o.icon}</span><div><b>${o.label}</b><div class="bar" style="width:0%"></div><small>0%</small></div></div>`).join('')
+  $('pTitle').textContent=title;$('pQuestion').textContent=q;$('pMeta').textContent=`${loc} • ${st?formatFriendlyDate(st)+' '+formatTime12(st):'Date/time'}`;$('pIcon').innerHTML=iconHTML(title+' '+q);
+  const opts=[...document.querySelectorAll('.opt')].map(i=>i.value).filter(Boolean);$('pOptions').innerHTML=(opts.length?miPlanrVisual.enrichOptions(opts,q):[{icon:'✨',label:'Option preview'}]).map(o=>`<div class="choice"><span class="icon-badge">${iconHTML(o.label, q)}</span><div><b>${esc(o.label)}</b><div class="bar" style="width:0%"></div><small>0%</small></div></div>`).join('')
 }
 async function suggestPlaces(q){if(!q||q.length<3)return [];try{const r=await fetch(api('place-suggest')+'?q='+encodeURIComponent(q));return await r.json()}catch(e){return[]}}
 function initCreate(){
@@ -95,9 +106,9 @@ function initCreate(){
   }
 }
 async function initPoll(){
-  const params=new URLSearchParams(location.search);const slug=params.get('slug')||location.pathname.split('/').pop();const invite=params.get('invite')||'';const res=await fetch(api('get-poll')+'?slug='+encodeURIComponent(slug)+'&invite='+encodeURIComponent(invite));const data=await res.json();if(!res.ok){$('pollMount').innerHTML='<p>Could not load poll.</p>';return}const p=data.poll;const total=data.votes.reduce((a,v)=>a+Number(v.count),0);const voteMap=Object.fromEntries(data.votes.map(v=>[v.option_id,Number(v.count)]));const opts=p.options||[];const enriched=opts.map(o=>({ ...o, ...miPlanrVisual.iconFor(o.option_text,p.question)}));let selected=data.my_vote?.option_id||'';
-  $('pollMount').innerHTML=`<div class="poll-card"><div class="poll-head"><div style="font-size:42px">${miPlanrVisual.iconFor(p.title+' '+p.question).icon}</div><h2>${p.title}</h2><p>${p.question}</p><small>${p.location||''} ${p.start_at?' • '+formatFriendlyDate(new Date(p.start_at))+' '+formatTime12(new Date(p.start_at)):''}</small></div><div class="poll-body"><p>${p.description||''}</p><div id="voteChoices"></div><input id="voterName" placeholder="Your name"><input id="voterEmail" placeholder="Your email"><div class="actions"><button class="btn" id="voteNow">${data.my_vote?'Update my vote':'Cast my vote'}</button><button class="btn secondary" id="gcal">Google Calendar</button><button class="btn secondary" id="ocal">Outlook</button></div><div id="voteMsg"></div></div></div>`;
-  function draw(){document.getElementById('voteChoices').innerHTML=enriched.map(o=>{const c=voteMap[o.id]||0;const pct=total?Math.round(c/total*100):0;return `<label class="choice vote-option"><input type="radio" name="opt" value="${o.id}" ${selected===o.id?'checked':''}><span class="icon-badge">${o.icon}</span><div class="choice-content"><b>${o.option_text}</b><div class="bar" style="width:${pct}%"></div><small>${c} vote${c===1?'':'s'} • ${pct}%</small></div></label>`}).join('')+`<div class="notice">${total} of ${p.threshold||3} votes received ${total>=(p.threshold||3)?'🎉 quorum reached':''}</div>`}draw();document.querySelectorAll('input[name=opt]').forEach(r=>r.onchange=e=>selected=e.target.value);
+  const params=new URLSearchParams(location.search);const slug=params.get('slug')||location.pathname.split('/').pop();const invite=params.get('invite')||'';const res=await fetch(api('get-poll')+'?slug='+encodeURIComponent(slug)+'&invite='+encodeURIComponent(invite));const data=await res.json();if(!res.ok){$('pollMount').innerHTML='<p>Could not load poll.</p>';return}const p=data.poll;const total=data.votes.reduce((a,v)=>a+Number(v.count),0);const voteMap=Object.fromEntries(data.votes.map(v=>[v.option_id,Number(v.count)]));const opts=p.options||[];const enriched=opts.map(o=>({ ...o, visual: miPlanrVisual.iconFor(o.option_text,p.question)}));let selected=data.my_vote?.option_id||'';
+  $('pollMount').innerHTML=`<div class="poll-card"><div class="poll-head"><div style="font-size:42px">${iconHTML(p.title+' '+p.question)}</div><h2>${p.title}</h2><p>${p.question}</p><small>${p.location||''} ${p.start_at?' • '+formatFriendlyDate(new Date(p.start_at))+' '+formatTime12(new Date(p.start_at)):''}</small></div><div class="poll-body"><p>${p.description||''}</p><div id="voteChoices"></div><input id="voterName" placeholder="Your name"><input id="voterEmail" placeholder="Your email"><div class="actions"><button class="btn" id="voteNow">${data.my_vote?'Update my vote':'Cast my vote'}</button><button class="btn secondary" id="gcal">Google Calendar</button><button class="btn secondary" id="ocal">Outlook</button></div><div id="voteMsg"></div></div></div>`;
+  function draw(){document.getElementById('voteChoices').innerHTML=enriched.map(o=>{const c=voteMap[o.id]||0;const pct=total?Math.round(c/total*100):0;return `<label class="choice vote-option"><input type="radio" name="opt" value="${o.id}" ${selected===o.id?'checked':''}><span class="icon-badge">${iconHTMLFromResult(o.visual)}</span><div class="choice-content"><b>${esc(o.option_text || o.label || '')}</b><div class="bar" style="width:${pct}%"></div><small>${c} vote${c===1?'':'s'} • ${pct}%</small></div></label>`}).join('')+`<div class="notice">${total} of ${p.threshold||3} votes received ${total>=(p.threshold||3)?'🎉 quorum reached':''}</div>`}draw();document.querySelectorAll('input[name=opt]').forEach(r=>r.onchange=e=>selected=e.target.value);
   $('voteNow').onclick=async()=>{if(!selected){alert('Choose an option first');return}const rr=await fetch(api('cast-vote'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug,invite_token:invite,option_id:selected,voter_name:$('voterName').value,voter_email:$('voterEmail').value})});const jd=await rr.json();$('voteMsg').innerHTML='<div class="notice">'+(rr.ok?'✅ Vote saved. You can edit it before the deadline using the same invite link.':'Error: '+jd.error)+'</div>';};
   function calUrl(provider){const text=encodeURIComponent(p.title);const details=encodeURIComponent((p.description||'')+'\nPoll: '+location.href);const loc=encodeURIComponent(p.location||'');const s=p.start_at?new Date(p.start_at):new Date();const e=p.end_at?new Date(p.end_at):new Date(s.getTime()+3600000);const fmt=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';if(provider==='google')return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${loc}&dates=${fmt(s)}/${fmt(e)}`;return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${text}&body=${details}&location=${loc}&startdt=${s.toISOString()}&enddt=${e.toISOString()}`}$('gcal').onclick=()=>window.open(calUrl('google'),'_blank');$('ocal').onclick=()=>window.open(calUrl('outlook'),'_blank')
 }

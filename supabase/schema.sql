@@ -102,3 +102,41 @@ alter table public.polls add column if not exists maps_url text;
 alter table public.polls add column if not exists address_line1 text;
 alter table public.polls add column if not exists city text;
 alter table public.polls add column if not exists postcode text;
+
+
+-- v6.4 voting safety: make one invite/email update the existing vote instead of inserting duplicates
+alter table public.poll_options add column if not exists label text;
+update public.poll_options set label = coalesce(label, option_text, '') where label is null;
+alter table public.poll_options alter column label drop not null;
+alter table public.poll_options alter column option_text drop not null;
+
+-- remove duplicate votes before adding constraints, keeping the newest vote
+with ranked as (
+  select id, row_number() over (partition by poll_id, invite_token order by updated_at desc nulls last, created_at desc nulls last, id desc) rn
+  from public.votes
+  where invite_token is not null and invite_token <> ''
+)
+delete from public.votes v using ranked r where v.id = r.id and r.rn > 1;
+
+with ranked as (
+  select id, row_number() over (partition by poll_id, lower(voter_email) order by updated_at desc nulls last, created_at desc nulls last, id desc) rn
+  from public.votes
+  where voter_email is not null and voter_email <> ''
+)
+delete from public.votes v using ranked r where v.id = r.id and r.rn > 1;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'votes_poll_invite_unique') then
+    alter table public.votes add constraint votes_poll_invite_unique unique (poll_id, invite_token);
+  end if;
+exception when duplicate_table then null; when unique_violation then null;
+end $$;
+
+do $$
+begin
+  if not exists (select 1 from pg_constraint where conname = 'votes_poll_email_unique') then
+    alter table public.votes add constraint votes_poll_email_unique unique (poll_id, voter_email);
+  end if;
+exception when duplicate_table then null; when unique_violation then null;
+end $$;
