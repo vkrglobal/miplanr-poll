@@ -26,6 +26,49 @@ window.miPlanrVisual = (() => {
   };
 
   const FOOD_MAP = {"pizza": "🍕", "burger": "🍔", "pasta": "🍝", "sushi": "🍣", "ramen": "🍜", "noodles": "🍜", "curry": "🍛", "taco": "🌮", "burrito": "🌯", "steak": "🥩", "chicken": "🍗", "fish": "🐟", "chips": "🍟", "salad": "🥗", "sandwich": "🥪", "bbq": "🔥", "barbecue": "🔥", "kebab": "🥙", "falafel": "🧆", "hummus": "🧆", "rice": "🍚", "paella": "🥘", "dim sum": "🥟", "dumplings": "🥟", "spring rolls": "🥢", "pho": "🍜", "thai": "🍲", "chinese": "🥡", "indian": "🍛", "mexican": "🌮", "italian": "🍝", "french": "🥐", "greek": "🥙", "turkish": "🥙", "ice cream": "🍦", "cake": "🍰", "birthday cake": "🎂", "banana": "🍌", "tomato": "🍅", "tomatoes": "🍅", "kiwi": "🥝", "kiwifruit": "🥝", "mango": "🥭", "mangoes": "🥭", "apple": "🍎", "orange": "🍊", "coffee": "☕", "tea": "🍵", "smoothie": "🥤", "breakfast": "🍳", "brunch": "🥞", "lunch": "🥪", "dinner": "🍽️", "restaurant": "🍽️", "pub": "🍻", "wine": "🍷", "beer": "🍺", "mocktail": "🍹"};
+
+
+  // v7.0 richer food and drink matching. These are intentionally broad so normal words like
+  // "milk", "eggs", "bacon", "mince", "steak", "vegan pizza" and country dishes are recognised.
+  Object.assign(FOOD_MAP, {
+    // dairy, breakfast, basics
+    "milk":"🥛","whole milk":"🥛","semi skimmed milk":"🥛","skimmed milk":"🥛","oat milk":"🥛","almond milk":"🥛","soya milk":"🥛","soy milk":"🥛","coconut milk":"🥥","cheese":"🧀","cheddar":"🧀","brie":"🧀","camembert":"🧀","mozzarella":"🧀","parmesan":"🧀","feta":"🧀","halloumi":"🧀","yoghurt":"🥛","yogurt":"🥛","butter":"🧈","cream":"🥛","eggs":"🥚","egg":"🥚","fried egg":"🍳","scrambled eggs":"🍳","omelette":"🍳","omelet":"🍳","bacon":"🥓","sausage":"🌭","sausages":"🌭","beans":"🫘","baked beans":"🫘","toast":"🍞","bread":"🍞","sourdough":"🍞","bagel":"🥯","croissant":"🥐","pancakes":"🥞","waffles":"🧇","porridge":"🥣","cereal":"🥣","granola":"🥣",
+    // meat and fish
+    "mince":"🥩","beef mince":"🥩","minced beef":"🥩","pork mince":"🥩","turkey mince":"🦃","lamb mince":"🥩","steak":"🥩","sirloin":"🥩","ribeye":"🥩","fillet steak":"🥩","rump steak":"🥩","beef":"🥩","roast beef":"🥩","lamb":"🥩","pork":"🥩","ham":"🍖","gammon":"🍖","turkey":"🦃","duck":"🦆","chicken nuggets":"🍗","fried chicken":"🍗","wings":"🍗","salmon":"🐟","tuna":"🐟","cod":"🐟","haddock":"🐟","prawns":"🍤","shrimp":"🍤","lobster":"🦞","crab":"🦀","mussels":"🦪","oysters":"🦪","scallops":"🦪","fish and chips":"🍟","seafood":"🦐",
+    // pies and British/Irish comfort food
+    "pie":"🥧","meat pie":"🥧","steak pie":"🥧","steak and ale pie":"🥧","chicken pie":"🥧","chicken and mushroom pie":"🥧","apple pie":"🥧","shepherds pie":"🥧","shepherd's pie":"🥧","cottage pie":"🥧","fish pie":"🥧","pasty":"🥟","cornish pasty":"🥟","sausage roll":"🌭","scotch egg":"🥚","toad in the hole":"🌭","bangers and mash":"🌭","mash":"🥔","mashed potato":"🥔","jacket potato":"🥔","roast potatoes":"🥔","roast dinner":"🍽️","sunday roast":"🍽️","yorkshire pudding":"🍞","ploughmans":"🧀","full english":"🍳","english breakfast":"🍳","haggis":"🍽️","neeps and tatties":"🥔",
+    // vegan / vegetarian / dietary
+    "vegan":"🌱","vegan option":"🌱","vegan burger":"🌱","vegan pizza":"🌱","vegan curry":"🌱","vegan pie":"🥧","vegetarian":"🥗","veggie":"🥗","plant based":"🌱","plant-based":"🌱","gluten free":"🌾","gluten-free":"🌾","halal":"🍽️","kosher":"🍽️",
+    // pizza and variations
+    "pizza":"🍕","margherita":"🍕","pepperoni pizza":"🍕","pepperoni":"🍕","hawaiian pizza":"🍕","meat feast":"🍕","bbq chicken pizza":"🍕","veggie pizza":"🍕","four cheese pizza":"🍕","quattro formaggi":"🍕","calzone":"🍕","garlic bread":"🧄",
+    // fast food / casual
+    "burger":"🍔","cheeseburger":"🍔","hamburger":"🍔","chicken burger":"🍔","veggie burger":"🍔","hot dog":"🌭","fries":"🍟","chips":"🍟","nachos":"🧀","wrap":"🌯","shawarma":"🥙","gyro":"🥙","doner":"🥙","fish finger":"🐟","meatballs":"🍝","wings":"🍗",
+    // fruit and veg
+    "avocado":"🥑","broccoli":"🥦","carrot":"🥕","corn":"🌽","cucumber":"🥒","lettuce":"🥬","spinach":"🥬","mushroom":"🍄","onion":"🧅","garlic":"🧄","potato":"🥔","sweet potato":"🍠","peas":"🫛","chilli":"🌶️","pepper":"🫑","peppers":"🫑","aubergine":"🍆","eggplant":"🍆","courgette":"🥒","zucchini":"🥒","pineapple":"🍍","grapes":"🍇","strawberry":"🍓","blueberry":"🫐","berries":"🫐","pear":"🍐","peach":"🍑","melon":"🍈","watermelon":"🍉","lemon":"🍋","lime":"🍋","coconut":"🥥","cherry":"🍒",
+    // world cuisines and dishes
+    "risotto":"🍚","lasagne":"🍝","lasagna":"🍝","carbonara":"🍝","bolognese":"🍝","spaghetti":"🍝","mac and cheese":"🧀","gnocchi":"🍝","ravioli":"🍝","tortellini":"🍝","focaccia":"🍞","bruschetta":"🍅","risotto":"🍚","tiramisu":"🍰","gelato":"🍦",
+    "sushi":"🍣","sashimi":"🍣","tempura":"🍤","katsu":"🍛","katsu curry":"🍛","teriyaki":"🍱","bento":"🍱","yakitori":"🍢","udon":"🍜","soba":"🍜","miso soup":"🍲","onigiri":"🍙",
+    "curry":"🍛","chicken tikka":"🍛","tikka masala":"🍛","butter chicken":"🍛","korma":"🍛","vindaloo":"🍛","madras":"🍛","biryani":"🍚","naan":"🫓","roti":"🫓","chapati":"🫓","samosa":"🥟","pakora":"🥟","dhal":"🍲","dal":"🍲","paneer":"🧀","saag":"🥬","chutney":"🥣",
+    "dim sum":"🥟","bao":"🥟","wonton":"🥟","fried rice":"🍚","chow mein":"🍜","sweet and sour":"🥡","peking duck":"🦆","hot pot":"🍲","mapo tofu":"🍲","char siu":"🍖","spring roll":"🥢","spring rolls":"🥢",
+    "taco":"🌮","tacos":"🌮","burrito":"🌯","quesadilla":"🌮","enchilada":"🌯","fajitas":"🌮","guacamole":"🥑","salsa":"🍅","churros":"🍩",
+    "thai green curry":"🍛","thai red curry":"🍛","pad thai":"🍜","tom yum":"🍲","satay":"🍢","laksa":"🍜","rendang":"🍛","nasi goreng":"🍚","mie goreng":"🍜","satay chicken":"🍢",
+    "pho":"🍜","banh mi":"🥖","bibimbap":"🍚","kimchi":"🥬","korean bbq":"🔥","bulgogi":"🥩","tteokbokki":"🍲",
+    "moussaka":"🍆","souvlaki":"🥙","tzatziki":"🥣","spanakopita":"🥧","falafel":"🧆","hummus":"🧆","tabbouleh":"🥗","shakshuka":"🍳","tagine":"🍲","couscous":"🍚",
+    "paella":"🥘","tapas":"🍽️","tortilla":"🥚","empanada":"🥟","arepa":"🫓","feijoada":"🍲","jerk chicken":"🍗","gumbo":"🍲","jambalaya":"🍚","mac n cheese":"🧀",
+    // desserts and snacks
+    "cake":"🍰","birthday cake":"🎂","cupcake":"🧁","brownie":"🍫","cookie":"🍪","biscuit":"🍪","donut":"🍩","doughnut":"🍩","chocolate":"🍫","sweets":"🍬","candy":"🍬","popcorn":"🍿","crisps":"🥔","pretzel":"🥨","ice cream":"🍦","sorbet":"🍨","pudding":"🍮","cheesecake":"🍰","trifle":"🍨","custard":"🍮"
+  });
+
+  Object.assign(BEVERAGE_MAP, {
+    // milk / soft / juice / hot drinks
+    "milk":"🥛","chocolate milk":"🥛","strawberry milk":"🥛","oat milk":"🥛","almond milk":"🥛","soya milk":"🥛","soy milk":"🥛","iced coffee":"🧊","flat white":"☕","mocha":"☕","frappuccino":"🥤","bubble tea":"🧋","boba":"🧋","chai":"🍵","chai latte":"🍵","herbal tea":"🍵","peppermint tea":"🍵","camomile tea":"🍵","chamomile tea":"🍵",
+    "orange juice":"🧃","apple juice":"🧃","pineapple juice":"🧃","mango juice":"🧃","grape juice":"🧃","tomato juice":"🧃","fresh juice":"🧃","squash":"🧃","cordial":"🧃","blackcurrant":"🧃","vimto":"🧃","j20":"🧃","j2o":"🧃",
+    "cola":"🥤","coca cola":"🥤","coca-cola":"🥤","coke":"🥤","diet coke":"🥤","coke zero":"🥤","pepsi max":"🥤","pepsi":"🥤","sprite":"🥤","fanta":"🥤","tango":"🥤","7 up":"🥤","7up":"🥤","irn bru":"🥤","dr pepper":"🥤","mountain dew":"🥤","root beer":"🥤","cream soda":"🥤","ginger beer":"🥤","ginger ale":"🥤","tonic":"🥤","soda water":"🥤","lemonade":"🍋","cloudy lemonade":"🍋","limeade":"🍋",
+    "still water":"💧","sparkling water":"💧","mineral water":"💧","tap water":"💧","coconut water":"🥥","flavoured water":"💧",
+    "smoothie":"🥤","protein shake":"🥤","shake":"🥤","milkshake":"🥤","banana milkshake":"🥤","strawberry milkshake":"🥤","chocolate milkshake":"🥤","slushie":"🥤","slurpee":"🥤",
+    "mocktail":"🍹","virgin mojito":"🍹","fruit punch":"🍹","pimms":"🍹","pimm's":"🍹","aperol spritz":"🍹","spritz":"🍹","martini":"🍸","negroni":"🍸","old fashioned":"🥃","espresso martini":"🍸","piña colada":"🍹","pina colada":"🍹","bloody mary":"🍹","sangria":"🍷","mulled wine":"🍷",
+    "ale":"🍺","ipa":"🍺","stout":"🍺","guinness":"🍺","shandy":"🍺","non alcoholic beer":"🍺","alcohol free beer":"🍺","rose wine":"🍷","rosé":"🍷","red wine":"🍷","white wine":"🍷","sparkling wine":"🍾","cava":"🍾","tequila":"🥃","brandy":"🥃","cognac":"🥃","baileys":"🥃","sake":"🍶","soju":"🍶"
+  });
   const AIRLINE_MAP = {"british airways": "✈️", "easyjet": "✈️", "ryanair": "✈️", "virgin atlantic": "✈️", "emirates": "✈️", "qatar airways": "✈️", "etihad": "✈️", "turkish airlines": "✈️", "lufthansa": "✈️", "air france": "✈️", "klm": "✈️", "delta": "✈️", "united airlines": "✈️", "american airlines": "✈️", "southwest": "✈️", "jetblue": "✈️", "singapore airlines": "✈️", "cathay pacific": "✈️", "qantas": "✈️", "air new zealand": "✈️", "ana": "✈️", "japan airlines": "✈️", "thai airways": "✈️", "malaysia airlines": "✈️", "saudia": "✈️", "wizz air": "✈️", "tui": "✈️", "norwegian": "✈️", "iberia": "✈️", "aer lingus": "✈️", "finnair": "✈️", "swiss": "✈️", "austrian airlines": "✈️", "tap air portugal": "✈️", "air canada": "✈️", "westjet": "✈️", "latam": "✈️", "avianca": "✈️", "ethiopian airlines": "✈️", "kenya airways": "✈️", "egyptair": "✈️", "royal air maroc": "✈️", "sas": "✈️", "brussels airlines": "✈️", "vueling": "✈️", "pegasus": "✈️", "air india": "✈️", "indigo": "✈️", "spicejet": "✈️", "cebu pacific": "✈️"};
   const BRAND_MAP = {"apple": "", "google": "G", "microsoft": "⊞", "amazon": "🛒", "meta": "∞", "facebook": "f", "instagram": "◎", "whatsapp": "💬", "x": "𝕏", "twitter": "𝕏", "linkedin": "in", "youtube": "▶", "netflix": "N", "spotify": "♬", "tesla": "T", "bmw": "🚘", "mercedes": "🚘", "audi": "🚘", "volkswagen": "🚘", "toyota": "🚘", "honda": "🚘", "ford": "🚘", "nike": "✓", "adidas": "▲", "puma": "🐆", "under armour": "🏷️", "samsung": "S", "sony": "S", "lg": "🏷️", "panasonic": "🏷️", "hp": "HP", "dell": "D", "lenovo": "L", "salesforce": "☁", "hubspot": "🔶", "slack": "#", "zoom": "🎥", "teams": "👥", "notion": "N", "todoist": "✓", "garmin": "⌚", "strava": "🚴", "uber": "🚕", "bolt": "⚡", "airbnb": "🏠", "booking.com": "🏷️", "expedia": "🏷️", "paypal": "P", "stripe": "S"};
   const GENERIC = [

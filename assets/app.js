@@ -91,7 +91,7 @@ function renderPreview(){
 async function suggestPlaces(q){if(!q||q.length<3)return [];try{const r=await fetch(api('place-suggest')+'?q='+encodeURIComponent(q));return await r.json()}catch(e){return[]}}
 
 
-// v6.9 free-first poll translation.
+// v7.0 free-first poll translation.
 // In-page translation uses the free MyMemory endpoint where available, and the button also
 // provides a Google Translate website fallback for whole-page browser translation.
 const MI_TRANSLATE_LANGS = {
@@ -110,16 +110,25 @@ function googleTranslateUrl(lang){
 }
 function ensureTranslatePanel(hostId){
   let panel=$('translatePanel');
-  if(panel) return panel;
-  panel=document.createElement('div');
-  panel.id='translatePanel';
-  panel.className='translate-panel notice';
-  panel.innerHTML=`<b>Translate poll</b><div class="translate-row"><select id="translateLang">${Object.entries(MI_TRANSLATE_LANGS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select><button type="button" class="btn" id="applyTranslate">Translate this poll</button><button type="button" class="btn secondary" id="googleTranslate">Open Google Translate</button></div><small id="translateStatus">Translates the page, poll question, options, descriptions, placeholders and typed inputs. Free translation can be approximate.</small>`;
-  const host=$(hostId)||document.querySelector('.card')||document.body;
-  host.prepend(panel);
-  $('googleTranslate').onclick=()=>window.open(googleTranslateUrl($('translateLang').value),'_blank');
-  $('applyTranslate').onclick=()=>translateCurrentPage($('translateLang').value);
+  if(!panel){
+    panel=document.createElement('div');
+    panel.id='translatePanel';
+    panel.className='translate-panel notice visible';
+    panel.innerHTML=`<b>Translate this poll</b><div class="translate-row"><select id="translateLang">${Object.entries(MI_TRANSLATE_LANGS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select><button type="button" class="btn" id="applyTranslate">Translate now</button><button type="button" class="btn secondary" id="googleTranslate">Google Translate fallback</button></div><small id="translateStatus">Choose a language, then press Translate now. This translates visible poll text, questions, answers, descriptions, placeholders and typed inputs. Hokkien/Cantonese use the closest free Chinese fallback.</small>`;
+    const host=$(hostId)||$('createMsg')||$('pollForm')||document.querySelector('main')||document.body;
+    if(host.id==='createMsg') host.parentNode.insertBefore(panel, host);
+    else host.appendChild(panel);
+    $('googleTranslate').onclick=()=>window.open(googleTranslateUrl($('translateLang').value),'_blank');
+    $('applyTranslate').onclick=()=>translateCurrentPage($('translateLang').value);
+  }
+  panel.style.display='block';
+  panel.classList.add('visible');
+  panel.scrollIntoView({behavior:'smooth', block:'center'});
   return panel;
+}
+function openTranslatePanel(hostId){
+  try{ ensureTranslatePanel(hostId); }
+  catch(e){ window.open(googleTranslateUrl('es'),'_blank'); }
 }
 async function mmTranslate(text, target){
   text=String(text||'').trim(); if(!text) return text;
@@ -182,7 +191,7 @@ function initCreate(){
   ['New Zealand','United Kingdom','Greece'].forEach(v=>$('options').appendChild(optionRow(v)));
   document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',renderPreview));
   $('addOption').onclick=()=>{$('options').appendChild(optionRow());renderPreview()}; $('previewBtn').onclick=renderPreview;
-  $('translateBtn').onclick=()=>ensureTranslatePanel(null);
+  $('translateBtn').onclick=()=>openTranslatePanel(null);
   $('location').addEventListener('input',async e=>{const box=$('placeSuggestions');const items=await suggestPlaces(e.target.value);box.innerHTML=items.slice(0,5).map(p=>`<button type="button" data-lat="${p.lat||''}" data-lon="${p.lon||''}">${p.label||p.display_name}</button>`).join('');box.style.display=items.length?'block':'none';box.querySelectorAll('button').forEach(b=>b.onclick=()=>{$('location').value=b.textContent;$('location').dataset.lat=b.dataset.lat||'';$('location').dataset.lon=b.dataset.lon||'';box.style.display='none';renderPreview()})});
   renderPreview();
   $('pollForm').onsubmit=async ev=>{
@@ -207,7 +216,7 @@ function initCreate(){
 async function initPoll(){
   const params=new URLSearchParams(location.search);const slug=params.get('slug')||location.pathname.split('/').pop();const invite=params.get('invite')||'';const res=await fetch(api('get-poll')+'?slug='+encodeURIComponent(slug)+'&invite='+encodeURIComponent(invite));const data=await res.json();if(!res.ok){$('pollMount').innerHTML='<p>Could not load poll.</p>';return}const p=data.poll;const total=data.votes.reduce((a,v)=>a+Number(v.count),0);const voteMap=Object.fromEntries(data.votes.map(v=>[v.option_id,Number(v.count)]));const opts=p.options||[];const enriched=opts.map(o=>({ ...o, visual: miPlanrVisual.iconFor(o.option_text,p.question)}));let selected=data.my_vote?.option_id||'';
   $('pollMount').innerHTML=`<div class="poll-card"><div class="poll-head"><div style="font-size:42px">${iconHTML(p.title+' '+p.question)}</div><h2>${p.title}</h2><p>${p.question}</p><small>${p.location||''} ${p.start_at?' • '+formatFriendlyDate(new Date(p.start_at))+' '+formatTime12(new Date(p.start_at)):''}</small></div><div class="poll-body"><p>${p.description||''}</p><div id="voteChoices"></div><input id="voterName" placeholder="Your name"><input id="voterEmail" placeholder="Your email"><div class="actions"><button class="btn" id="voteNow">${data.my_vote?'Update my vote':'Cast my vote'}</button><button class="btn secondary" id="gcal">Google Calendar</button><button class="btn secondary" id="ocal">Outlook</button><button class="btn pink" id="pollTranslateBtn">Translate</button></div><div id="voteMsg"></div></div></div>`;
-  function draw(){document.getElementById('voteChoices').innerHTML=enriched.map(o=>{const c=voteMap[o.id]||0;const pct=total?Math.round(c/total*100):0;return `<label class="choice vote-option"><input type="radio" name="opt" value="${o.id}" ${selected===o.id?'checked':''}><span class="icon-badge">${iconHTMLFromResult(o.visual)}</span><div class="choice-content"><b>${esc(o.option_text || o.label || '')}</b><div class="bar" style="width:${pct}%"></div><small>${c} vote${c===1?'':'s'} • ${pct}%</small></div></label>`}).join('')+`<div class="notice">${total} of ${p.threshold||3} votes received ${total>=(p.threshold||3)?'🎉 quorum reached':''}</div>`}draw();document.querySelectorAll('input[name=opt]').forEach(r=>r.onchange=e=>selected=e.target.value); $('pollTranslateBtn').onclick=()=>ensureTranslatePanel('pollMount');
+  function draw(){document.getElementById('voteChoices').innerHTML=enriched.map(o=>{const c=voteMap[o.id]||0;const pct=total?Math.round(c/total*100):0;return `<label class="choice vote-option"><input type="radio" name="opt" value="${o.id}" ${selected===o.id?'checked':''}><span class="icon-badge">${iconHTMLFromResult(o.visual)}</span><div class="choice-content"><b>${esc(o.option_text || o.label || '')}</b><div class="bar" style="width:${pct}%"></div><small>${c} vote${c===1?'':'s'} • ${pct}%</small></div></label>`}).join('')+`<div class="notice">${total} of ${p.threshold||3} votes received ${total>=(p.threshold||3)?'🎉 quorum reached':''}</div>`}draw();document.querySelectorAll('input[name=opt]').forEach(r=>r.onchange=e=>selected=e.target.value); $('pollTranslateBtn').onclick=()=>openTranslatePanel('pollMount');
   $('voteNow').onclick=async()=>{
     if(!selected){alert('Choose an option first');return}
     const btn=$('voteNow'); btn.disabled=true; btn.textContent='Saving vote…';
