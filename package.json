@@ -1,1 +1,8 @@
-{"scripts":{"test":"node --check netlify/functions/create-poll.js && node --check netlify/functions/get-poll.js && node --check netlify/functions/vote.js && node --check netlify/functions/send-invites.js"},"dependencies":{}}
+{
+  "name": "miplanr-poll-v3",
+  "version": "3.0.0",
+  "private": true,
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4"
+  }
+}
