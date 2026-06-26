@@ -17,6 +17,12 @@ exports.handler = async (event) => {
     const threshold = Math.max(1, parseInt(body.threshold || 3, 10));
     const options = Array.isArray(body.options) ? body.options.map(x => String(x).trim()).filter(Boolean) : [];
     const participants = Array.isArray(body.participants) ? body.participants.map(x => String(x).trim()).filter(Boolean) : [];
+    const startAt = body.startAt || body.start_at || null;
+    const endAt = body.endAt || body.end_at || null;
+    const startDate = body.startDate || body.start_date || null;
+    const startTime = body.startTime || body.start_time || null;
+    const endDate = body.endDate || body.end_date || null;
+    const endTime = body.endTime || body.end_time || null;
 
     if (!question) return json(400, { error: 'Poll question is required.' });
     if (options.length < 2) return json(400, { error: 'Please add at least two options.' });
@@ -29,7 +35,13 @@ exports.handler = async (event) => {
         event_title: eventTitle,
         creator_name: creatorName,
         deadline,
-        threshold
+        threshold,
+        start_at: startAt,
+        end_at: endAt,
+        start_date: startDate,
+        start_time: startTime,
+        end_date: endDate,
+        end_time: endTime
       })
     });
 

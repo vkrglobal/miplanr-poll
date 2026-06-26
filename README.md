@@ -1,22 +1,13 @@
-# miPlanr Poll 2.0 + 2.1
+# miPlanr Poll 2.2 Smart
 
-## What this version does
-
-- Clear 3-step create flow: Build → Invite → Create & Share
-- Supabase-backed poll storage
-- Real vote counts and real percentages
-- Resend email invitations
+Includes:
+- Supabase-backed polls and votes
+- Resend email invites
 - WhatsApp sharing
-- Copy/open poll links
-- Google Calendar and Outlook links on the voting page
-- 2.1 integration-ready buttons for ChurchSuite, iSAMS, EduLink, Classroom, Salesforce, HubSpot, Teamo and SportsEngine
+- Smart start/end date and time fields
+- Calendar links with real start/end time
+- Option icons/emoji based on the option text
+- Quorum celebration and email notification when votes needed are reached
+- 2.1 integration-ready buttons
 
-## Required Netlify environment variables
-
-- SUPABASE_URL
-- SUPABASE_SERVICE_ROLE_KEY
-- RESEND_API_KEY
-
-## Database setup
-
-Run `supabase/schema.sql` in Supabase SQL Editor.
+Run `supabase/schema.sql` in Supabase SQL Editor after uploading these files.

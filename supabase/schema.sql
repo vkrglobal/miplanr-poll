@@ -79,3 +79,12 @@ create index if not exists idx_votes_poll_id on public.votes(poll_id);
 create index if not exists idx_votes_option_id on public.votes(option_id);
 create index if not exists idx_participants_poll_id on public.participants(poll_id);
 create index if not exists idx_integration_requests_poll_id on public.integration_requests(poll_id);
+
+-- miPlanr Poll 2.2 smart scheduling and quorum notification upgrade
+alter table public.polls add column if not exists start_at timestamptz;
+alter table public.polls add column if not exists end_at timestamptz;
+alter table public.polls add column if not exists start_date text;
+alter table public.polls add column if not exists start_time text;
+alter table public.polls add column if not exists end_date text;
+alter table public.polls add column if not exists end_time text;
+alter table public.polls add column if not exists quorum_notified_at timestamptz;

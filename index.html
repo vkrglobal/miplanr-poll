@@ -1,15 +1,15 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>miPlanr Poll Creator</title><link rel="stylesheet" href="/assets/app.css"></head><body>
 <header class="topbar"><div class="brand">mi<span>Planr</span></div><div class="tag">Poll & Schedule</div></header>
 <main class="wrap">
-  <section class="hero">
-    <h1>Create a new poll</h1>
-    <p>Clear 3-step flow: build the poll, invite people, then create it. Once created, miPlanr gives you WhatsApp, email and copy-link sharing.</p>
+  <section class="hero hero-card">
+    <div><span class="eyebrow">Dream • Plan • Soar</span><h1>Create a smarter poll</h1><p>Build the poll first, add date/time details, invite people, then create and share. miPlanr adds icons, calendar links and a celebration when quorum is reached.</p></div>
+    <div class="hero-orb">✨</div>
   </section>
 
   <section class="stepper" aria-label="Create poll steps">
-    <div class="step"><strong><span class="num">1</span> Build</strong><small>Add the question, event, close date and choices.</small></div>
-    <div class="step"><strong><span class="num">2</span> Invite</strong><small>Add email addresses. WhatsApp sharing appears after creation.</small></div>
-    <div class="step"><strong><span class="num">3</span> Create & Share</strong><small>Click Create Poll, then copy/share the link.</small></div>
+    <div class="step"><strong><span class="num">1</span> Build</strong><small>Question, event, choices and smart icons.</small></div>
+    <div class="step"><strong><span class="num">2</span> Schedule</strong><small>Add date/time. Blank times are handled automatically.</small></div>
+    <div class="step"><strong><span class="num">3</span> Invite & Share</strong><small>Create poll, email invites and share via WhatsApp.</small></div>
   </section>
 
   <form id="pollForm">
@@ -20,25 +20,33 @@
       <div class="grid"><div class="field"><label>Closing date / note</label><input id="deadline" placeholder="2 Jul" /></div><div class="field"><label>Votes needed to confirm</label><input id="threshold" type="number" min="1" value="3" /></div></div>
     </section>
 
+    <section class="card schedule-card">
+      <div class="section-label">Step 2 — What date/time is this poll about?</div>
+      <p class="hint">Optional, but recommended. If you add a future date but leave time blank, miPlanr uses <strong>8:00am</strong>. If all date/time fields are blank, miPlanr uses the <strong>next available half-hour slot</strong>.</p>
+      <div class="grid"><div class="field"><label>Start date</label><input id="startDate" type="date" /></div><div class="field"><label>Start time</label><input id="startTime" type="time" /></div></div>
+      <div class="grid"><div class="field"><label>End date</label><input id="endDate" type="date" /></div><div class="field"><label>End time</label><input id="endTime" type="time" /></div></div>
+      <div id="schedulePreview" class="notice small-notice">Schedule preview will appear here.</div>
+    </section>
+
     <section class="card">
       <div class="section-label">Step 1 continued — Choices</div>
-      <p class="hint">Add at least two options. Keep them short and clear so they look good on mobile.</p>
+      <p class="hint">Add at least two options. miPlanr will add appropriate icons where it can, for example 🇬🇷 Greece, 🍌 banana or ⚽ football.</p>
       <div id="options"></div><button type="button" class="mini" onclick="addOption('')">+ Add option</button>
     </section>
 
     <section class="card">
-      <div class="section-label">Step 2 — Invite emails</div>
-      <p class="hint">Optional. Emails are sent when you click <strong>Create Poll</strong>. WhatsApp sharing is available after the poll has been created.</p>
+      <div class="section-label">Step 3 — Invite emails</div>
+      <p class="hint">Optional. Emails are sent when you click <strong>Create Poll</strong>. WhatsApp sharing appears after the poll has been created.</p>
       <div id="emails"></div><button type="button" class="mini" onclick="addEmail('')">+ Add email</button>
     </section>
 
-    <button class="btn" id="createBtn" type="submit">Create Poll and show sharing options</button>
+    <button class="btn btn-hero" id="createBtn" type="submit">Create Poll and show sharing options</button>
   </form>
 
   <section id="success" class="card success">
-    <h2>Poll created ✅</h2>
+    <h2>Poll created 🎉</h2>
     <p class="notice" id="emailStatus">Your poll is ready.</p>
-    <div class="section-label">Step 3 — Share poll link</div>
+    <div class="section-label">Share poll link</div>
     <div id="shareUrl" class="sharebox"></div>
     <div class="actions">
       <button class="btn secondary" onclick="copyLink()">Copy link</button>
@@ -55,14 +63,23 @@
 const optionBox=document.getElementById('options'), emailBox=document.getElementById('emails');let lastPoll=null,lastUrl='';
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
 function safe(v){return String(v||'').replaceAll('&','&amp;').replaceAll('"','&quot;').replaceAll('<','&lt;').replaceAll('>','&gt;')}
-function addOption(v=''){const d=document.createElement('div');d.className='option-row';d.innerHTML=`<input class="opt" placeholder="Option" value="${safe(v)}"><button type="button" class="mini" title="Remove option" onclick="this.parentElement.remove()">×</button>`;optionBox.appendChild(d)}
+function emojiFor(text){const s=String(text||'').toLowerCase();const pairs=[['greece','🇬🇷'],['greek','🇬🇷'],['albania','🇦🇱'],['turkey','🇹🇷'],['new zealand','🇳🇿'],['nz','🇳🇿'],['uk','🇬🇧'],['england','🏴'],['france','🇫🇷'],['spain','🇪🇸'],['italy','🇮🇹'],['usa','🇺🇸'],['america','🇺🇸'],['banana','🍌'],['food','🍽️'],['shopping','🛍️'],['park','🌳'],['beach','🏖️'],['ski','🎿'],['snow','❄️'],['football','⚽'],['rugby','🏉'],['tennis','🎾'],['coffee','☕'],['pizza','🍕'],['cinema','🎬'],['meeting','📅'],['yes','✅'],['no','❌'],['maybe','🤔'],['other','✨']];return (pairs.find(([k])=>s.includes(k))||['','🗳️'])[1]}
+function addOption(v=''){const d=document.createElement('div');d.className='option-row';d.innerHTML=`<span class="option-emoji">${emojiFor(v)}</span><input class="opt" placeholder="Option" value="${safe(v)}" oninput="this.previousElementSibling.textContent=emojiFor(this.value)"><button type="button" class="mini" title="Remove option" onclick="this.parentElement.remove()">×</button>`;optionBox.appendChild(d)}
 function addEmail(v=''){const d=document.createElement('div');d.className='email-row';d.innerHTML=`<input class="email" type="email" placeholder="name@email.com" value="${safe(v)}"><button type="button" class="mini" title="Remove email" onclick="this.parentElement.remove()">×</button>`;emailBox.appendChild(d)}
 ['Greece','Albania','Other'].forEach(addOption);addEmail('');
 function values(sel){return [...document.querySelectorAll(sel)].map(i=>i.value.trim()).filter(Boolean)}
+function pad(n){return String(n).padStart(2,'0')}
+function nextHalfHour(){const d=new Date();d.setMinutes(d.getMinutes()<30?30:60,0,0);return d}
+function toInputDate(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
+function toInputTime(d){return `${pad(d.getHours())}:${pad(d.getMinutes())}`}
+function buildSchedule(){let sd=startDate.value,st=startTime.value,ed=endDate.value,et=endTime.value;const allBlank=!sd&&!st&&!ed&&!et;if(allBlank){const s=nextHalfHour(),e=new Date(s.getTime()+30*60000);sd=toInputDate(s);st=toInputTime(s);ed=toInputDate(e);et=toInputTime(e);return {startDate:sd,startTime:st,endDate:ed,endTime:et,startAt:new Date(`${sd}T${st}:00`).toISOString(),endAt:new Date(`${ed}T${et}:00`).toISOString(),rule:'No date/time entered, so miPlanr used the next available 30-minute slot.'}}
+if(sd&&!st)st='08:00'; if(sd&&!ed)ed=sd; if(ed&&!et)et=st||'08:30'; if(sd&&st&&ed&&!et)et=st; if(sd&&st&&!ed)ed=sd;let startAt=null,endAt=null;try{if(sd&&st)startAt=new Date(`${sd}T${st}:00`).toISOString();if(ed&&et)endAt=new Date(`${ed}T${et}:00`).toISOString();}catch{}return {startDate:sd,startTime:st,endDate:ed,endTime:et,startAt,endAt,rule:(sd&&!startTime.value)?'Future date entered with blank time, so miPlanr used 8:00am.':'Schedule captured.'}}
+function updateSchedulePreview(){const s=buildSchedule();schedulePreview.textContent=`${s.rule} Start: ${s.startDate||'—'} ${s.startTime||'—'} · End: ${s.endDate||'—'} ${s.endTime||'—'}`}
+['startDate','startTime','endDate','endTime'].forEach(id=>document.getElementById(id).addEventListener('input',updateSchedulePreview));updateSchedulePreview();
 async function api(path,body){const r=await fetch('/.netlify/functions/'+path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||d.message||'Request failed');return d}
-async function sendInvites(url,poll,recipients){return api('send-invites',{url,recipients,question:poll.question,creator:poll.creator_name||creator.value,deadline:poll.deadline||deadline.value,subject:'Please vote: '+poll.question,message:'Please vote in this miPlanr poll.'})}
+async function sendInvites(url,poll,recipients){return api('send-invites',{url,recipients,question:poll.question,creator:poll.creator_name||creator.value,deadline:poll.deadline||deadline.value,subject:'🗳️ Please vote: '+poll.question,message:'Please vote in this miPlanr poll.'})}
 async function sendInvitesAgain(){if(!lastPoll)return toast('Create a poll first');const recipients=values('.email');if(!recipients.length)return toast('Add at least one email address');const r=await sendInvites(lastUrl,lastPoll,recipients);document.getElementById('emailStatus').textContent=r.ok?'Email invitations sent ✅':(r.message||r.error||'Email invitation warning. Check Resend logs.');toast('Email invite attempt complete')}
-document.getElementById('pollForm').addEventListener('submit',async e=>{e.preventDefault();const btn=document.getElementById('createBtn');btn.disabled=true;btn.textContent='Creating poll...';try{const payload={question:question.value,eventTitle:eventTitle.value,creatorName:creator.value,deadline:deadline.value,threshold:threshold.value,options:values('.opt'),participants:values('.email')};if(payload.options.length<2)throw new Error('Please add at least two options.');const created=await api('create-poll',payload);lastPoll=created.poll;lastUrl=location.origin+created.url;let emailMsg='No email recipients entered. WhatsApp and copy link are ready.';if(payload.participants.length){const sent=await sendInvites(lastUrl,lastPoll,payload.participants);emailMsg=sent.ok?'Email invitations sent ✅':(sent.message||sent.error||'Email invitation warning. Check Resend logs.')}shareUrl.textContent=lastUrl;waBtn.href='https://wa.me/?text='+encodeURIComponent('Please vote in my miPlanr poll: '+lastUrl);openBtn.href=lastUrl;emailStatus.textContent=emailMsg;success.classList.add('show');success.scrollIntoView({behavior:'smooth'});renderIntegrations();}catch(err){alert(err.message)}finally{btn.disabled=false;btn.textContent='Create Poll and show sharing options'}});
+document.getElementById('pollForm').addEventListener('submit',async e=>{e.preventDefault();const btn=document.getElementById('createBtn');btn.disabled=true;btn.textContent='Creating poll...';try{const sched=buildSchedule();const payload={question:question.value,eventTitle:eventTitle.value,creatorName:creator.value,deadline:deadline.value,threshold:threshold.value,options:values('.opt'),participants:values('.email'),...sched};if(payload.options.length<2)throw new Error('Please add at least two options.');const created=await api('create-poll',payload);lastPoll=created.poll;lastUrl=location.origin+created.url;let emailMsg='No email recipients entered. WhatsApp and copy link are ready.';if(payload.participants.length){const sent=await sendInvites(lastUrl,lastPoll,payload.participants);emailMsg=sent.ok?'Email invitations sent ✅':(sent.message||sent.error||'Email invitation warning. Check Resend logs.')}shareUrl.textContent=lastUrl;waBtn.href='https://wa.me/?text='+encodeURIComponent('Please vote in my miPlanr poll: '+lastUrl);openBtn.href=lastUrl;emailStatus.textContent=emailMsg;success.classList.add('show');success.scrollIntoView({behavior:'smooth'});renderIntegrations();}catch(err){alert(err.message)}finally{btn.disabled=false;btn.textContent='Create Poll and show sharing options'}});
 function copyLink(){navigator.clipboard.writeText(lastUrl);toast('Poll link copied')}
 const ints=[['Google Calendar','📅','Available on poll page'],['Outlook / Teams','🪟','Available on poll page'],['ChurchSuite','⛪','Request sync'],['iSAMS','🏫','Request sync'],['EduLink','📚','Request sync'],['Google Classroom','🎓','Request sync'],['Salesforce','☁️','Request sync'],['HubSpot','🔶','Request sync'],['Teamo','👥','Request sync'],['SportsEngine','⚽','Request sync']];
 function renderIntegrations(){integrations.innerHTML=ints.map(x=>`<button type="button" class="integration" onclick="requestIntegration('${x[0]}')"><span>${x[1]}</span>${x[0]}<small>${x[2]}</small></button>`).join('')}
