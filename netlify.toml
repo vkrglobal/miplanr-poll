@@ -9,3 +9,8 @@
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
+
+[[redirects]]
+  from = "/poll/:slug"
+  to = "/poll.html?slug=:slug"
+  status = 200

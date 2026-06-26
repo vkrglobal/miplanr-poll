@@ -1,0 +1,11 @@
+{
+  "name": "miplanr-poll-v2",
+  "version": "2.0.0",
+  "private": true,
+  "description": "miPlanr Poll v2 - database-backed polls with email and WhatsApp sharing",
+  "scripts": {
+    "dev": "netlify dev",
+    "start": "netlify dev"
+  },
+  "dependencies": {}
+}
