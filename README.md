@@ -1,4 +1,4 @@
-# miPlanr Events & Polls v4.1
+# miPlanr Events & Polls v4.2
 
 This fixes the v4 deployment issue caused by Supabase realtime requiring the `ws` package in Netlify Node 18.
 
@@ -21,3 +21,10 @@ Required Netlify variables:
 Optional:
 - OPENAI_API_KEY for translation
 - OPENAI_MODEL if you want to override the default translation model
+
+
+## v4.2 fixes
+- Fixes old Supabase `poll_options.label` NOT NULL constraint by inserting label and making the schema tolerant.
+- Default translation language is English.
+- Translation is optional and only needs `OPENAI_API_KEY` if you want live AI translation.
+- Option guidance is clearer and icons are still added automatically.

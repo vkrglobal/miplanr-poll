@@ -30,6 +30,7 @@ create table if not exists public.poll_options (
   id uuid primary key default gen_random_uuid(),
   poll_id uuid references public.polls(id) on delete cascade,
   option_text text not null,
+  label text,
   icon text default '✨',
   sort_order integer default 0,
   created_at timestamptz default now()
@@ -80,6 +81,9 @@ alter table public.polls add column if not exists created_at timestamptz default
 alter table public.polls add column if not exists updated_at timestamptz default now();
 alter table public.poll_options add column if not exists poll_id uuid;
 alter table public.poll_options add column if not exists option_text text;
+alter table public.poll_options add column if not exists label text;
+update public.poll_options set label = coalesce(label, option_text) where label is null;
+alter table public.poll_options alter column label drop not null;
 alter table public.poll_options add column if not exists icon text default '✨';
 alter table public.poll_options add column if not exists sort_order integer default 0;
 alter table public.poll_options add column if not exists created_at timestamptz default now();
