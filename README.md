@@ -1,30 +1,31 @@
-# miPlanr Events & Polls v4.2
+# miPlanr Poll v5.0 Clean Production Foundation
 
-This fixes the v4 deployment issue caused by Supabase realtime requiring the `ws` package in Netlify Node 18.
+This package is a clean reset to avoid mixed-version issues.
 
-Included:
-- One invite = one editable vote
-- Location passed to Google/Outlook Calendar
-- Smart defaults for date/time
-- Smart icons
-- Preview button
-- Translate button for title/question/description/options
-- Supabase schema
-- Resend email invites
-- Google Sites embed file
+## Features
+- Supabase-backed polls
+- One invitation = one editable vote
+- Email invitations using Resend
+- WhatsApp sharing
+- Google Calendar and Outlook links with location
+- Smart date/time defaults
+- Smart icons for countries, sports, foods, places and common activities
+- Optional OpenAI translation button
+- Quorum celebration email to creator
+- Google Sites embed support
 
-Required Netlify variables:
+## Required Netlify environment variables
 - SUPABASE_URL
 - SUPABASE_SERVICE_ROLE_KEY
 - RESEND_API_KEY
 
-Optional:
+## Optional
 - OPENAI_API_KEY for translation
-- OPENAI_MODEL if you want to override the default translation model
 
-
-## v4.2 fixes
-- Fixes old Supabase `poll_options.label` NOT NULL constraint by inserting label and making the schema tolerant.
-- Default translation language is English.
-- Translation is optional and only needs `OPENAI_API_KEY` if you want live AI translation.
-- Option guidance is clearer and icons are still added automatically.
+## Install
+1. Backup your current miplanr-poll folder.
+2. Copy this package into your GitHub folder.
+3. Run supabase/schema.sql in Supabase SQL Editor.
+4. Commit and push with GitHub Desktop.
+5. Wait for Netlify Published.
+6. Test with a fresh poll.

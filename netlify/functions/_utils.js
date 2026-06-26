@@ -1,51 +1,12 @@
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-function json(statusCode, body) {
-  return {
-    statusCode,
-    headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' },
-    body: JSON.stringify(body)
-  };
-}
-
-function envOk() {
-  return Boolean(SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY);
-}
-
-async function sb(path, options = {}) {
-  if (!envOk()) throw new Error('Supabase env vars missing. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in Netlify.');
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    ...options,
-    headers: {
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      'content-type': 'application/json',
-      prefer: 'return=representation',
-      ...(options.headers || {})
-    }
-  });
-  const text = await res.text();
-  let data = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-  if (!res.ok) throw new Error(typeof data === 'string' ? data : (data?.message || JSON.stringify(data)));
-  return data;
-}
-
-function slugify() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let s = '';
-  for (let i = 0; i < 7; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  return s;
-}
-
-function safeArray(value) {
-  return Array.isArray(value) ? value : [];
-}
-
-function cleanEmail(v) {
-  const s = String(v || '').trim().toLowerCase();
-  return s.includes('@') ? s : '';
-}
-
-module.exports = { json, sb, slugify, safeArray, cleanEmail };
+const json = (statusCode, body) => ({ statusCode, headers: { 'content-type': 'application/json', 'access-control-allow-origin': '*' }, body: JSON.stringify(body) });
+const slug = () => Math.random().toString(36).slice(2, 10);
+const token = () => [...crypto.getRandomValues ? [] : []];
+function makeToken(){ return Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)+Date.now().toString(36); }
+function env(){ const url=process.env.SUPABASE_URL; const key=process.env.SUPABASE_SERVICE_ROLE_KEY; if(!url||!key) throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in Netlify.'); return {url:url.replace(/\/$/,''), key}; }
+async function sb(path, opts={}){ const {url,key}=env(); const res=await fetch(`${url}/rest/v1/${path}`, { ...opts, headers:{ apikey:key, authorization:`Bearer ${key}`, 'content-type':'application/json', prefer:'return=representation', ...(opts.headers||{}) } }); const text=await res.text(); let data=null; try{data=text?JSON.parse(text):null}catch{data=text} if(!res.ok) throw new Error((data&&data.message)||text||`Supabase error ${res.status}`); return data; }
+function parseBody(event){ try{return JSON.parse(event.body||'{}')}catch{return {}} }
+function mapsUrl(location){ return location ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}` : ''; }
+function iconFor(text=''){ const t=String(text).toLowerCase(); const countries={greece:'🇬🇷',albania:'🇦🇱',turkey:'🇹🇷','new zealand':'🇳🇿',france:'🇫🇷',spain:'🇪🇸',italy:'🇮🇹',portugal:'🇵🇹',germany:'🇩🇪',uk:'🇬🇧','united kingdom':'🇬🇧',england:'🏴',scotland:'🏴',wales:'🏴',ireland:'🇮🇪',usa:'🇺🇸',america:'🇺🇸',canada:'🇨🇦',australia:'🇦🇺',japan:'🇯🇵',china:'🇨🇳',india:'🇮🇳',mexico:'🇲🇽',brazil:'🇧🇷',argentina:'🇦🇷'}; for(const k in countries){ if(t.includes(k)) return countries[k]; }
+ const pairs=[['banana','🍌'],['pizza','🍕'],['burger','🍔'],['coffee','☕'],['tea','🫖'],['pasta','🍝'],['curry','🍛'],['sushi','🍣'],['bbq','🔥'],['food','🍽️'],['football','⚽'],['soccer','⚽'],['rugby','🏉'],['cricket','🏏'],['tennis','🎾'],['swim','🏊'],['hockey','🏑'],['golf','⛳'],['basketball','🏀'],['netball','🏐'],['running','🏃'],['cycle','🚴'],['holiday','✈️'],['flight','✈️'],['airline','✈️'],['hotel','🏨'],['beach','🏖️'],['park','🌳'],['church','⛪'],['school','🎓'],['birthday','🎂'],['meeting','👥'],['work','💼'],['cinema','🎬'],['movie','🎬'],['music','🎵'],['restaurant','🍽️'],['shopping','🛍️'],['train','🚆'],['car','🚗'],['walk','🚶'],['zoom','💻'],['teams','💻'],['london','📍'],['southampton','📍'],['richmond','🌳'],['other','✨']]; for(const [k,v] of pairs){ if(t.includes(k)) return v; } return '✨'; }
+async function sendEmail({to,subject,html}){ const key=process.env.RESEND_API_KEY; if(!key) return { skipped:true, reason:'RESEND_API_KEY not set' }; const res=await fetch('https://api.resend.com/emails',{method:'POST',headers:{authorization:`Bearer ${key}`,'content-type':'application/json'},body:JSON.stringify({from:'miPlanr <poll@mail.miplanr.com>',to,subject,html})}); const data=await res.json().catch(()=>({})); if(!res.ok) throw new Error(data.message||'Resend failed'); return data; }
+module.exports={json,sb,parseBody,slug,makeToken,mapsUrl,iconFor,sendEmail};
