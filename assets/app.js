@@ -1,12 +1,10 @@
-const API = '/api';
-const $ = (id) => document.getElementById(id);
-function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2800); }
-function pollUrl(id){ return `${location.origin}/poll.html?id=${encodeURIComponent(id)}`; }
-function waShare(url, text='Please vote in my miPlanr poll') { window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`,'_blank'); }
-function copyText(text){ navigator.clipboard.writeText(text).then(()=>toast('Copied')); }
-async function api(path, options={}){
-  const res = await fetch(API + path, { headers:{'Content-Type':'application/json'}, ...options });
-  const data = await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error || 'Something went wrong');
-  return data;
-}
+const $=(s,r=document)=>r.querySelector(s); const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const API='/api/';
+function iconFor(x=''){x=x.toLowerCase();const m={greece:'🇬🇷',albania:'🇦🇱',turkey:'🇹🇷','new zealand':'🇳🇿',france:'🇫🇷',spain:'🇪🇸',italy:'🇮🇹',usa:'🇺🇸',america:'🇺🇸',uk:'🇬🇧',england:'🏴',football:'⚽',soccer:'⚽',rugby:'🏉',hockey:'🏑',swimming:'🏊',tennis:'🎾',cricket:'🏏',basketball:'🏀',running:'🏃',cycling:'🚴',banana:'🍌',pizza:'🍕',burger:'🍔',sushi:'🍣',coffee:'☕',restaurant:'🍽️',bbq:'🔥',holiday:'✈️',flight:'✈️',airline:'✈️',park:'🌳',church:'⛪',school:'🎓',meeting:'👥',birthday:'🎂',cinema:'🎬',shopping:'🛍️',beach:'🏖️',hotel:'🏨',train:'🚆',london:'📍',southampton:'📍',zoom:'💻',teams:'💻'};for(const k in m) if(x.includes(k)) return m[k]; return '✨'}
+function nextHalfHour(){const d=new Date(); d.setMinutes(d.getMinutes()<30?30:60,0,0); return d}
+function fmtDate(d){return d.toISOString().slice(0,10)} function fmtTime(d){return d.toTimeString().slice(0,5)}
+function normaliseTimes(){const sd=$('#startDate'), st=$('#startTime'), ed=$('#endDate'), et=$('#endTime'), dl=$('#deadline'); if(!sd.value){const n=nextHalfHour(); sd.value=fmtDate(n); st.value=fmtTime(n); const e=new Date(n.getTime()+60*60*1000); ed.value=fmtDate(e); et.value=fmtTime(e)} else if(!st.value){st.value='08:00'} if(!ed.value) ed.value=sd.value; if(!et.value){const [h,m]=(st.value||'08:00').split(':').map(Number); et.value=String(Math.min(h+1,23)).padStart(2,'0')+':'+String(m).padStart(2,'0')} if(!dl.value){const d=new Date(sd.value+'T'+(st.value||'08:00')); d.setHours(d.getHours()-1); dl.value=d.toISOString().slice(0,16)}}
+function addRow(box,placeholder=''){const div=document.createElement('div');div.className='optionrow';div.innerHTML=`<input placeholder="${placeholder}"><button class="smallbtn x" type="button">×</button>`;div.querySelector('button').onclick=()=>div.remove();box.appendChild(div)}
+async function jfetch(url,body){const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body||{})}); const j=await r.json().catch(()=>({})); if(!r.ok||j.error) throw new Error(j.error||j.message||'Request failed'); return j}
+function pollUrl(slug,token){return location.origin+'/poll/'+slug+(token?'?invite='+encodeURIComponent(token):'')}
+function calendarUrl(kind,poll){const start=(poll.start_at||'').replace(/[-:]/g,'').replace('.000',''); const end=(poll.end_at||'').replace(/[-:]/g,'').replace('.000',''); const title=encodeURIComponent(poll.title||poll.question||'miPlanr event'); const loc=encodeURIComponent(poll.location||''); const details=encodeURIComponent((poll.description||'')+'\n\nCreated with miPlanr. '+location.origin+'/poll/'+poll.slug); if(kind==='google') return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&location=${loc}&details=${details}`; return `https://outlook.live.com/calendar/0/deeplink/compose?path=/calendar/action/compose&rru=addevent&subject=${title}&startdt=${encodeURIComponent(poll.start_at||'')}&enddt=${encodeURIComponent(poll.end_at||'')}&location=${loc}&body=${details}`}

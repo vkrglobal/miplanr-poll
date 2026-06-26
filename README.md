@@ -1,23 +1,21 @@
-# miPlanr Poll v3.0
+# miPlanr Events & Polls v4.0
+
+Production-style starter for the miPlanr Events & Polls module.
 
 ## Includes
-- Secure invitation tokens: one invite = one editable vote.
-- Vote updates before deadline instead of duplicate votes.
-- Location saved to poll and included in Google/Outlook calendar links.
-- Smart icons for common countries, foods, sports, holidays and locations.
-- Quorum celebration email to organiser via Resend.
-- Supabase-backed storage.
-- Netlify Functions backend.
-- Google Sites integration guide.
+- Event + poll creator wizard
+- One invite token = one editable vote
+- Supabase schema upgrade
+- Resend email invitations and quorum notifications
+- WhatsApp sharing
+- Google/Outlook calendar links with location
+- Smart icons and category defaults
+- Translation-ready endpoint
+- Google Sites embed snippet
 
-## Required Netlify environment variables
+## Required Netlify variables
 - SUPABASE_URL
 - SUPABASE_SERVICE_ROLE_KEY
 - RESEND_API_KEY
-
-## Install
-1. Run `supabase/schema.sql` in Supabase SQL Editor.
-2. Copy files into your GitHub repo.
-3. Commit and push.
-4. Wait for Netlify deploy.
-5. Test a brand-new poll.
+- OPENAI_API_KEY optional for AI translation/enrichment
+- GOOGLE_MAPS_API_KEY optional for future place autocomplete/maps

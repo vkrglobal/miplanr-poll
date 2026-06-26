@@ -1,45 +1,6 @@
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-function json(statusCode, body) {
-  return {
-    statusCode,
-    headers: {
-      'content-type': 'application/json',
-      'access-control-allow-origin': '*',
-      'access-control-allow-methods': 'GET,POST,OPTIONS',
-      'access-control-allow-headers': 'content-type'
-    },
-    body: JSON.stringify(body)
-  };
-}
-
-function requireSupabase() {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in Netlify environment variables.');
-  }
-}
-
-async function sb(path, options = {}) {
-  requireSupabase();
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    ...options,
-    headers: {
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      'content-type': 'application/json',
-      prefer: 'return=representation',
-      ...(options.headers || {})
-    }
-  });
-  const text = await res.text();
-  let data = null;
-  try { data = text ? JSON.parse(text) : null; } catch { data = text; }
-  if (!res.ok) {
-    const message = typeof data === 'string' ? data : (data?.message || JSON.stringify(data));
-    throw new Error(message);
-  }
-  return data;
-}
-
-module.exports = { json, sb };
+const { createClient } = require('@supabase/supabase-js');
+function json(status, body){return {statusCode:status,headers:{'content-type':'application/json','access-control-allow-origin':'*'},body:JSON.stringify(body)}}
+function sb(){return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY)}
+function slug(){return Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-4)}
+function token(){return Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)}
+module.exports={json,sb,slug,token};
