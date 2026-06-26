@@ -12,3 +12,15 @@
 .quick-grid{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 14px}.chip,.mini-chip{border:1px solid var(--border);background:#fff;color:var(--navy);border-radius:999px;padding:10px 13px;font-weight:900;cursor:pointer}.chip:hover,.mini-chip:hover,.chip.active,.mini-chip.active{border-color:var(--blue);background:linear-gradient(90deg,rgba(0,114,255,.10),rgba(0,198,255,.10));color:var(--blue)}
 .date-row input{font-size:18px;font-weight:800}.duration-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}.mini-label{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:900;margin-right:4px}.advanced-time{background:#fff;border:1px dashed var(--border);border-radius:16px;padding:12px;margin-top:10px}.advanced-time summary{cursor:pointer;font-weight:900;color:var(--blue)}
 @media(max-width:650px){.section-head{display:block}.date-summary{margin-top:8px}.quick-grid{display:grid;grid-template-columns:1fr 1fr}.chip{width:100%}}
+/* v6.3 date/time polish */
+.duration-builder{margin:1rem 0 1.4rem;padding:1rem;border:1px solid #dbe6ff;border-radius:18px;background:linear-gradient(135deg,#f7fbff,#fff)}
+.duration-top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.duration-top label{margin:0;font-weight:900;color:#0A1A4D;letter-spacing:.04em;text-transform:uppercase}
+.duration-top select{border:1px solid #dbe6ff;border-radius:14px;padding:.75rem 1rem;font-weight:800;color:#0A1A4D;background:white}
+#durationLabel{background:linear-gradient(135deg,#0072FF,#00C6FF);color:#fff;padding:.7rem 1rem;border-radius:999px;box-shadow:0 10px 24px rgba(0,114,255,.18)}
+#durationSlider{width:100%;margin:1rem 0 .4rem;accent-color:#0072FF}
+.date-summary{display:inline-flex;align-items:center;gap:.5rem;border:1px solid #cfe0ff;background:#eef6ff;border-radius:999px;padding:.65rem 1rem;color:#0A1A4D;font-weight:800}
+.quick-grid .chip.active{background:linear-gradient(135deg,#0072FF,#00C6FF);color:white;border-color:transparent;box-shadow:0 12px 25px rgba(0,114,255,.22)}
+.vote-option{align-items:center;text-align:left;gap:16px}
+.choice-content{flex:1;text-align:left}
+.choice-content b{display:block;margin-bottom:8px}

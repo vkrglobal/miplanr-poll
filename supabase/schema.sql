@@ -89,3 +89,16 @@ alter table public.votes add column if not exists invite_token text;
 alter table public.votes add column if not exists voter_name text;
 alter table public.votes add column if not exists voter_email text;
 alter table public.votes add column if not exists updated_at timestamptz default now();
+
+-- v6.3 safety upgrade
+alter table public.poll_options add column if not exists label text;
+update public.poll_options set label = coalesce(label, option_text, '') where label is null;
+alter table public.poll_options alter column label drop not null;
+alter table public.poll_options alter column option_text drop not null;
+alter table public.polls add column if not exists place_label text;
+alter table public.polls add column if not exists place_lat double precision;
+alter table public.polls add column if not exists place_lon double precision;
+alter table public.polls add column if not exists maps_url text;
+alter table public.polls add column if not exists address_line1 text;
+alter table public.polls add column if not exists city text;
+alter table public.polls add column if not exists postcode text;

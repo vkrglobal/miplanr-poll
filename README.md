@@ -1,25 +1,36 @@
-# miPlanr Poll v6.0 — Smart Visual Engine
+# miPlanr Poll v6.3 Polished
 
-Free-first production reset for miPlanr Events & Polls.
+Free-first smart event polling with:
 
-## Includes
-- Country flags for 249 countries/territories via Unicode flag generation.
-- Extensive free smart icon engine for sports, foods, airlines, brands and common event types.
-- Free-first OpenStreetMap/Nominatim location suggestions.
-- Optional GOOGLE_MAPS_API_KEY for richer places later.
-- Supabase-backed polls and votes.
-- One invite = one editable vote.
-- Resend email invites.
-- Google/Outlook calendar links with location.
+- Fixed Create Poll error handling
+- Stronger country/food/sport icon matching (NZ, UK, Greece, tomato, kiwifruit, mango, etc.)
+- Dummy-proof date/time entry
+- Date format guidance: `dd-mmm-yy`, e.g. `26-Jun-26`
+- Time format guidance: `am/pm`, e.g. `8:00 am`, `6:30 pm`
+- Date presets: Next 30 mins, Today, Tomorrow
+- Duration unit selector: minutes, hours, days
+- Duration slider
+- Free-first OpenStreetMap location suggestions
+- Supabase + Resend support
+
+## Install
+
+1. Backup current `miplanr-poll` folder.
+2. Extract this ZIP.
+3. Copy everything into your GitHub `miplanr-poll` folder.
+4. Run `supabase/schema.sql` in Supabase SQL Editor.
+5. Commit all changes in GitHub Desktop.
+6. Push origin.
+7. Wait for Netlify to publish.
+8. Test a brand-new poll.
 
 ## Required Netlify variables
-- SUPABASE_URL
-- SUPABASE_SERVICE_ROLE_KEY
-- RESEND_API_KEY optional but needed for emails
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `RESEND_API_KEY` optional for emails
 
 ## Optional variables
-- GOOGLE_MAPS_API_KEY for premium location autocomplete later
-- OPENAI_API_KEY for AI translation/localisation later
 
-
-V6.1 fixes: fixes poll_options.label errors, adds NZ/UK country aliases, improves location guidance and selected place metadata. Run supabase/schema.sql again after deploying.
+- `OPENAI_API_KEY` for future AI translation/localisation
+- `GOOGLE_MAPS_API_KEY` for premium Google Places later
