@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>miPlanr Events & Polls v7.5</title><link rel="stylesheet" href="/assets/app.css"><script defer src="/assets/visual-engine.js"></script><script defer src="/assets/app.js"></script></head><body data-page="create">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>miPlanr Events & Polls v7.6</title><link rel="stylesheet" href="/assets/app.css"><script defer src="/assets/visual-engine.js"></script><script defer src="/assets/app.js"></script></head><body data-page="create">
 <header class="top"><div class="wrap"><div class="brand"><div class="logo">mi<span>Planr</span></div><div class="tag">Dream • Plan • Soar</div></div><section class="hero"><span class="pill">✨ Smart icons</span><span class="pill">📍 Free-first places</span><span class="pill">🗳️ One invite = one vote</span><span class="pill">🌍 Working translation</span><span class="pill">📊 Admin results & export</span><h1>Plan anything beautifully.</h1><p>Create a smart event poll, invite people by email or WhatsApp, prevent duplicate votes, sync the result to calendars, and enrich options with country flags, sports, foods, brands and travel icons.</p></section></div></header>
 <main class="wrap grid">
 <section class="card"><div class="steps"><div class="step"><b>1. Build</b><small>Title, question, location, dates</small></div><div class="step"><b>2. Preview</b><small>Check how it looks</small></div><div class="step"><b>3. Create & share</b><small>Email, WhatsApp, calendar</small></div></div>
@@ -9,15 +9,15 @@
 <label>Description</label><p class="hint">Optional extra context shown to invitees. Keep it friendly and clear.</p><textarea id="description" placeholder="e.g. Please vote for your preferred destination. We’ll confirm once the quorum is reached."></textarea>
 <div class="location-card"><label>Location</label><p class="hint"><b>Be specific:</b> enter the venue, first line of address, postcode and city. Example: “St Mary’s Stadium, Britannia Road, Southampton SO14 5FP”. miPlanr suggests matching places and passes the selected location into calendar links.</p><div class="location-input-wrap"><span>📍</span><input id="location" placeholder="Start typing venue, postcode or city e.g. Southampton SO15 1BA"></div><div id="placeSuggestions" class="suggestions"></div><small class="hint">Tip: if suggestions are too broad, add postcode + city + first line of address.</small></div><div class="row"><div><label>Creator</label><p class="hint">Shown on invitations and emails.</p><input id="creator" placeholder="Josh Sim"></div></div>
 <section class="datetime-card">
-  <div class="section-head"><div><label>When is this happening?</label></div><span id="dateSummary" class="date-summary">Date/time will appear here</span></div>
-  <label for="quickDate">Date option</label>
-  <select id="quickDate">
-    <option value="next30" selected>Next 30 mins</option>
-    <option value="today">Today</option>
-    <option value="tomorrow">Tomorrow</option>
-    <option value="custom">Select another date</option>
-  </select>
-  <div class="row date-row"><div id="startDateWrap" hidden><label for="startDate">Start date</label><input id="startDate" type="date"></div><div><label for="startTime">Start time</label><input id="startTime" type="text" inputmode="text" placeholder="8:00 am"></div></div>
+  <div class="section-head"><div><label>When is this happening?</label><p class="hint">For standard polls this is shown as a clean calendar-style row. Click the date, start or end time to change it.</p></div><span id="dateSummary" class="date-summary">Date/time will appear here</span></div>
+  <div class="standard-when-row" id="standardWhenRow">
+    <button type="button" class="cal-pill standard-date-pill" id="standardDateBtn">Sunday 28 June</button>
+    <button type="button" class="cal-pill standard-start-pill" id="standardStartBtn">1:30 pm</button>
+    <span class="cal-dash">–</span>
+    <button type="button" class="cal-pill standard-end-pill" id="standardEndBtn">2:30 pm</button>
+  </div>
+  <div class="standard-quick-row"><select id="quickDate"><option value="next30" selected>Next 30 mins</option><option value="today">Today</option><option value="tomorrow">Tomorrow</option><option value="custom">Select another date</option></select><button type="button" class="btn secondary" id="openStandardCalendar">Open calendar</button></div>
+  <div class="row date-row compact-time-editor"><div id="startDateWrap" hidden><label for="startDate">Start date</label><input id="startDate" type="date"></div><div><label for="startTime">Start time</label><input id="startTime" type="text" inputmode="text" placeholder="8:00 am"></div></div>
   <div class="duration-builder"><div class="duration-top"><label>Duration</label><select id="durationUnit"><option value="minutes">Minutes</option><option value="hours" selected>Hours</option><option value="days">Days</option></select><strong id="durationLabel">1 hour</strong></div><input id="durationSlider" type="range" min="1" max="12" value="1"></div>
   <details class="advanced-time"><summary>Advanced: exact end time and voting deadline</summary>
     <div class="row"><div><label>End date</label><input id="endDate" type="date"></div><div><label>End time</label><input id="endTime" type="text" placeholder="9:00 pm"></div></div>
@@ -32,12 +32,13 @@
   <label>Results access</label>
   <p class="hint">Administrators can always see detailed results. Keep team access on if voters may also see results; turn it off to hide results from the team.</p>
   <label class="toggle-line"><input id="resultsVisible" type="checkbox" checked> Team can see poll results</label>
-  <label>Roster / rota sync webhook</label>
-  <p class="hint">Optional advanced setting. Add a ChurchSuite, Teamo, Google Sheets, Zapier/Make, or custom adapter URL to receive the selected names and date/time slots.</p>
-  <input id="rosterWebhook" placeholder="https://... optional roster adapter webhook">
+  <label>Results export / roster sync</label>
+  <p class="hint"><b>Dummy proof:</b> choose Excel/CSV or Google Sheets if you just want an easy download/copy. Choose ChurchSuite/Teamo only when you have an adapter/webhook URL from Zapier, Make or your developer.</p>
+  <select id="rosterSyncType"><option value="none">No automatic sync yet</option><option value="excel">Excel / CSV export</option><option value="google_sheets">Google Sheets copy/import</option><option value="churchsuite">ChurchSuite roster adapter</option><option value="teamo">Teamo roster adapter</option><option value="zapier_make">Zapier / Make / custom webhook</option></select>
+  <input id="rosterWebhook" placeholder="Only paste a webhook URL if using ChurchSuite, Teamo, Zapier or Make">
 </section>
 <label>Invite emails</label><p class="hint">Optional. Each email gets a unique invite link. One invitation = one editable vote, not multiple votes.</p><textarea id="emails" placeholder="one@email.com, two@email.com"></textarea>
 <div class="actions"><button type="button" class="btn secondary" id="previewBtn">Preview</button><button type="submit" class="btn">Create Poll</button><button type="button" class="btn pink" id="translateBtn">Translate / Localise</button></div>
 </form><div id="createMsg"></div><div id="sharePanel" class="share-panel"><h3>✅ Poll created</h3><p class="hint">Now share it. Email invites are sent automatically where configured.</p><input id="shareLink" readonly><div class="actions"><button class="btn" id="copyBtn">Copy link</button><button class="btn secondary" id="waBtn">WhatsApp</button><button class="btn secondary" id="openBtn">Open poll</button></div><div class="integration-grid"><div class="int">📅 Google Calendar</div><div class="int">🗓️ Outlook</div><div class="int">☁ Salesforce</div><div class="int">🔶 HubSpot</div><div class="int">⛪ ChurchSuite</div><div class="int">🏫 iSAMS</div><div class="int">⚽ Teamo</div><div class="int">🏟 SportsEngine</div></div></div></section>
 <aside class="card preview"><h3>Live preview</h3><div class="poll-card"><div class="poll-head"><div id="pIcon" style="font-size:38px">✨</div><h2 id="pTitle">Your event title</h2><p id="pQuestion">Your question will appear here</p><small id="pMeta">Location and date will appear here</small></div><div class="poll-body" id="pOptions"></div></div><div class="notice">Tip: create the poll before sharing. This prevents people voting on an unfinished draft.</div></aside>
-</main><footer class="footer">miPlanr Events & Polls v7.5 • Free-first smart planning foundation</footer></body></html>
+</main><footer class="footer">miPlanr Events & Polls v7.6 • Free-first smart planning foundation</footer></body></html>
