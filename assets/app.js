@@ -24,6 +24,8 @@ function parseFriendlyDate(v){
   const d=new Date(v); return isNaN(d)?null:d;
 }
 function formatTime12(d){let h=d.getHours(), m=pad(d.getMinutes()), ap=h>=12?'pm':'am';h=h%12||12;return h+':'+m+' '+ap}
+function formatTime12Compact(d){return formatTime12(d).replace(':00','')}
+function formatLongDayDate(d){return d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}
 function parseTime12(v, fallback='08:00'){
   if(!v) v=fallback; v=String(v).trim().toLowerCase().replace(/\s+/g,'');
   let m=v.match(/^(\d{1,2})(?::?(\d{2}))?(am|pm)?$/); if(!m) return fallback;
@@ -86,12 +88,12 @@ function optionRow(v=''){
 function calendarOptionRow(data={}){
   const d = data.start ? new Date(data.start) : nextHalfHour();
   const mins = data.duration_minutes || Math.max(15, Math.round(((data.end?new Date(data.end):new Date(d.getTime()+60*60000))-d)/60000)) || 60;
-  const row=document.createElement('div'); row.className='calendar-option-row';
-  row.innerHTML=`<div class="cal-summary"><span class="icon-badge">📅</span><strong class="calLabel"></strong><small>Select a date, start time and duration</small></div><div><label>Date</label><input class="calDate" type="date" value="${dateISO(d)}"></div><div><label>Start time</label><input class="calStart" type="text" placeholder="8:00 am" value="${formatTime12(d)}"></div><div><label>Duration</label><select class="calDuration"><option value="30">30 mins</option><option value="45">45 mins</option><option value="60">1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option><option value="180">3 hours</option><option value="240">4 hours</option><option value="480">Full day</option></select></div><button type="button" class="btn secondary calOpen">Open calendar</button><button type="button" class="btn secondary calRemove">×</button>`;
+  const row=document.createElement('div'); row.className='calendar-option-row calendar-option-card';
+  row.innerHTML=`<input class="calDate" type="date" value="${dateISO(d)}" hidden><input class="calStart" type="text" value="${formatTime12(d)}" hidden><select class="calDuration" hidden><option value="30">30 mins</option><option value="45">45 mins</option><option value="60">1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option><option value="180">3 hours</option><option value="240">4 hours</option><option value="480">Full day</option></select><button type="button" class="cal-pill cal-date-pill calOpen" aria-label="Choose date"></button><button type="button" class="cal-pill cal-start-pill calOpen" aria-label="Choose start time"></button><span class="cal-dash">–</span><button type="button" class="cal-pill cal-end-pill calOpen" aria-label="Choose end time"></button><button type="button" class="btn secondary calRemove" aria-label="Remove option">×</button>`;
   row.querySelector('.calDuration').value=String([30,45,60,90,120,180,240,480].includes(mins)?mins:60);
-  const refresh=()=>{const opt=calendarOptionFromRow(row);row.querySelector('.calLabel').textContent=opt?opt.label:'Choose date/time';renderPreview()};
+  const refresh=()=>{const opt=calendarOptionFromRow(row); if(opt){const sdt=new Date(opt.start_at), edt=new Date(opt.end_at); row.querySelector('.cal-date-pill').textContent=formatLongDayDate(sdt); row.querySelector('.cal-start-pill').textContent=formatTime12Compact(sdt); row.querySelector('.cal-end-pill').textContent=formatTime12Compact(edt);} renderPreview()};
   row.querySelector('.calRemove').onclick=()=>{row.remove();renderPreview()};
-  row.querySelector('.calOpen').onclick=()=>openCalendarPicker(row);
+  row.querySelectorAll('.calOpen').forEach(b=>b.onclick=()=>openCalendarPicker(row));
   row.querySelectorAll('input,select').forEach(i=>i.addEventListener('input',refresh));
   refresh();
   return row;
