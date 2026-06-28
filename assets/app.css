@@ -45,3 +45,5 @@ input[type="date"]{appearance:auto;-webkit-appearance:auto;cursor:pointer}
 .google-translate-box{height:0;overflow:hidden;opacity:0;pointer-events:none}
 body>.skiptranslate, .goog-te-banner-frame{display:none!important}
 body{top:0!important}
+.calendar-option-row{display:grid;grid-template-columns:1.2fr .7fr .7fr auto;gap:10px;align-items:end;margin:10px 0;padding:10px;border:1px solid rgba(0,0,0,.08);border-radius:14px;background:rgba(255,255,255,.7)}
+.calendar-option-row label{font-size:12px;margin:0 0 4px}.calendar-add-list{margin-top:12px}.calendar-add-list .choice{margin-bottom:8px}@media(max-width:720px){.calendar-option-row{grid-template-columns:1fr 1fr}.calendar-option-row button{grid-column:1/-1}}

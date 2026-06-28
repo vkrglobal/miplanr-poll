@@ -13,12 +13,12 @@ exports.handler=async(event)=>{
       location:body.location||'',address_line1:body.address_line1||'',city:body.city||'',postcode:body.postcode||'',place_label:body.place_label||body.location||'',
       place_lat:body.place_lat||null,place_lon:body.place_lon||null,maps_url:body.maps_url||'',
       start_at:body.start_at||null,end_at:body.end_at||null,deadline_at:body.deadline_at||null,
-      threshold:body.threshold||3,allow_vote_edit:true,notify_on_quorum:true
+      threshold:body.threshold||3,poll_type:body.poll_type||'standard',allow_vote_edit:true,notify_on_quorum:true
     };
     const {data:p,error:e}=await sb.from('polls').insert(poll).select('*').single();
     if(e)throw e;
 
-    const options=(body.options||[]).map((o,i)=>({poll_id:p.id,option_text:o,label:o,icon:(body.option_icons&&body.option_icons[i])||'✨',sort_order:i}));
+    const options=(body.options||[]).map((o,i)=>{const co=(body.calendar_options&&body.calendar_options[i])||{};return {poll_id:p.id,option_text:o,label:o,icon:(body.option_icons&&body.option_icons[i])||'✨',sort_order:i,start_at:co.start_at||null,end_at:co.end_at||null}});
     if(options.length){const {error:oe}=await sb.from('poll_options').insert(options);if(oe)throw oe;}
 
     const emails=[...new Set((body.emails||[]).filter(Boolean).map(x=>String(x).trim().toLowerCase()))];

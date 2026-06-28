@@ -82,11 +82,45 @@ function optionRow(v=''){
   const refresh=()=>{const r=miPlanrVisual.iconFor(row.querySelector('input').value,$('question')?.value);row.querySelector('.icon-badge').innerHTML=iconHTMLFromResult(r);};
   row.querySelector('button').onclick=()=>{row.remove();renderPreview()}; row.querySelector('input').oninput=()=>{refresh();renderPreview()}; refresh(); return row;
 }
+
+function calendarOptionRow(data={}){
+  const d = data.start ? new Date(data.start) : nextHalfHour();
+  const e = data.end ? new Date(data.end) : new Date(d.getTime()+60*60000);
+  const row=document.createElement('div'); row.className='calendar-option-row';
+  row.innerHTML=`<div><label>Date</label><input class="calDate" type="date" value="${dateISO(d)}"></div><div><label>Start time</label><input class="calStart" type="text" placeholder="8:00 am" value="${formatTime12(d)}"></div><div><label>End time</label><input class="calEnd" type="text" placeholder="9:00 am" value="${formatTime12(e)}"></div><button type="button" class="btn secondary">×</button>`;
+  row.querySelector('button').onclick=()=>{row.remove();renderPreview()};
+  row.querySelectorAll('input').forEach(i=>i.oninput=renderPreview);
+  return row;
+}
+function isCalendarPoll(){return $('pollType')?.value==='calendar'}
+function getCalendarOptions(){
+  return [...document.querySelectorAll('.calendar-option-row')].map(row=>{
+    const dd=parseFriendlyDate(row.querySelector('.calDate')?.value||''); if(!dd) return null;
+    const st=parseTime12(row.querySelector('.calStart')?.value||'','08:00');
+    const et=parseTime12(row.querySelector('.calEnd')?.value||'','09:00');
+    let start=new Date(dateISO(dd)+'T'+st), end=new Date(dateISO(dd)+'T'+et); if(end<=start) end=new Date(start.getTime()+60*60000);
+    return {label:formatFriendlyDate(start)+' '+formatTime12(start)+' - '+formatTime12(end), start_at:toOffsetDateTime(start), end_at:toOffsetDateTime(end)};
+  }).filter(Boolean);
+}
+function resetOptionsForMode(){
+  if(!$('options')) return; $('options').innerHTML='';
+  if(isCalendarPoll()){
+    if($('optionsLabel')) $('optionsLabel').textContent='Date/time options';
+    if($('optionsHint')) $('optionsHint').textContent='Choose each option from a calendar. Voters can tick Yes for every date they can attend/help/play.';
+    [0,1,2].forEach(i=>{const d=nextHalfHour(); d.setDate(d.getDate()+i); $('options').appendChild(calendarOptionRow({start:d,end:new Date(d.getTime()+60*60000)}));});
+  } else {
+    if($('optionsLabel')) $('optionsLabel').textContent='Options';
+    if($('optionsHint')) $('optionsHint').textContent='Add the choices. miPlanr automatically adds flags/icons, foods, drinks, sports teams and travel icons.';
+    resetOptionsForMode(); $('pollType')?.addEventListener('change', resetOptionsForMode);
+  }
+  renderPreview();
+}
+
 function renderPreview(){
   if(!$('pTitle'))return; syncHiddenDateTimes();
   const title=$('title').value||'Your event title';const q=$('question').value||'Your question will appear here';const loc=$('location').value||'Location';const st=$('start').value?new Date($('start').value):null;
   $('pTitle').textContent=title;$('pQuestion').textContent=q;$('pMeta').textContent=`${loc} • ${st?formatFriendlyDate(st)+' '+formatTime12(st):'Date/time'}`;$('pIcon').innerHTML=iconHTML(title+' '+q);
-  const opts=[...document.querySelectorAll('.opt')].map(i=>i.value).filter(Boolean);$('pOptions').innerHTML=(opts.length?miPlanrVisual.enrichOptions(opts,q):[{icon:'✨',label:'Option preview'}]).map(o=>`<div class="choice"><span class="icon-badge">${iconHTML(o.label, q)}</span><div><b>${esc(o.label)}</b><div class="bar" style="width:0%"></div><small>0%</small></div></div>`).join('')
+  const opts=isCalendarPoll()?getCalendarOptions().map(o=>o.label):[...document.querySelectorAll('.opt')].map(i=>i.value).filter(Boolean);$('pOptions').innerHTML=(opts.length?miPlanrVisual.enrichOptions(opts,q):[{icon:'✨',label:'Option preview'}]).map(o=>`<div class="choice"><span class="icon-badge">${isCalendarPoll()?'📅':iconHTML(o.label, q)}</span><div><b>${esc(o.label)}</b><div class="bar" style="width:0%"></div><small>${isCalendarPoll()?'Yes / available':'0%'}</small></div></div>`).join('')
 }
 async function suggestPlaces(q){if(!q||q.length<3)return [];try{const r=await fetch(api('place-suggest')+'?q='+encodeURIComponent(q));return await r.json()}catch(e){return[]}}
 
@@ -175,16 +209,16 @@ function initCreate(){
   $('durationUnit')?.addEventListener('change',()=>{updateDurationControls(); const s=fromDateTimeParts('startDate','startTime','08:00')||nextHalfHour(); const e=new Date(s.getTime()+durationMinutes()*60000); setDateTimeParts('end',e); syncHiddenDateTimes(); renderPreview()});
   $('durationSlider')?.addEventListener('input',()=>{updateDurationControls(); const s=fromDateTimeParts('startDate','startTime','08:00')||nextHalfHour(); const e=new Date(s.getTime()+durationMinutes()*60000); setDateTimeParts('end',e); syncHiddenDateTimes(); renderPreview()});
   ['startDate','startTime','endDate','endTime','deadlineDate','deadlineTime'].forEach(id=>$(id)&&$(id).addEventListener('input',()=>{if(id==='startDate' && $('quickDate')) $('quickDate').value='custom'; if($('startDateWrap')) $('startDateWrap').hidden = $('quickDate')?.value !== 'custom'; syncHiddenDateTimes();renderPreview()}));
-  ['New Zealand','United Kingdom','Greece'].forEach(v=>$('options').appendChild(optionRow(v)));
+  resetOptionsForMode(); $('pollType')?.addEventListener('change', resetOptionsForMode);
   document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',renderPreview));
-  $('addOption').onclick=()=>{$('options').appendChild(optionRow());renderPreview()}; $('previewBtn').onclick=renderPreview;
+  $('addOption').onclick=()=>{$('options').appendChild(isCalendarPoll()?calendarOptionRow():optionRow());renderPreview()}; $('previewBtn').onclick=renderPreview;
   $('translateBtn').onclick=()=>openTranslatePanel('pollForm');
   $('location').addEventListener('input',async e=>{const box=$('placeSuggestions');const items=await suggestPlaces(e.target.value);box.innerHTML=items.slice(0,5).map(p=>`<button type="button" data-lat="${p.lat||''}" data-lon="${p.lon||''}">${p.label||p.display_name}</button>`).join('');box.style.display=items.length?'block':'none';box.querySelectorAll('button').forEach(b=>b.onclick=()=>{$('location').value=b.textContent;$('location').dataset.lat=b.dataset.lat||'';$('location').dataset.lon=b.dataset.lon||'';box.style.display='none';renderPreview()})});
   renderPreview();
   $('pollForm').onsubmit=async ev=>{
     ev.preventDefault(); syncHiddenDateTimes(); const btn=ev.submitter||document.querySelector('button[type=submit]'); btn.disabled=true;
-    try{const options=[...document.querySelectorAll('.opt')].map(i=>i.value.trim()).filter(Boolean);if(options.length<2){alert('Please add at least two options.');return}
-      const enrichedOpts=miPlanrVisual.enrichOptions(options,$('question').value);const payload={title:$('title').value,question:$('question').value,description:$('description').value,location:$('location').value,place_label:$('location').value,place_lat:$('location').dataset.lat||null,place_lon:$('location').dataset.lon||null,maps_url:($('location').dataset.lat&&$('location').dataset.lon)?('https://www.openstreetmap.org/?mlat='+$('location').dataset.lat+'&mlon='+$('location').dataset.lon+'#map=16/'+$('location').dataset.lat+'/'+$('location').dataset.lon):'',creator:$('creator').value||'miPlanr creator',start_at:$('start').value,end_at:$('end').value,deadline_at:$('deadline').value,threshold:Number($('threshold').value||3),options,option_icons:enrichedOpts.map(x=>x.icon),emails:parseEmails($('emails').value)};
+    try{const calendarOptions=isCalendarPoll()?getCalendarOptions():[]; const options=isCalendarPoll()?calendarOptions.map(o=>o.label):[...document.querySelectorAll('.opt')].map(i=>i.value.trim()).filter(Boolean);if(options.length<2){alert('Please add at least two options.');return}
+      const enrichedOpts=miPlanrVisual.enrichOptions(options,$('question').value);const payload={poll_type:isCalendarPoll()?'calendar':'standard',title:$('title').value,question:$('question').value,description:$('description').value,location:$('location').value,place_label:$('location').value,place_lat:$('location').dataset.lat||null,place_lon:$('location').dataset.lon||null,maps_url:($('location').dataset.lat&&$('location').dataset.lon)?('https://www.openstreetmap.org/?mlat='+$('location').dataset.lat+'&mlon='+$('location').dataset.lon+'#map=16/'+$('location').dataset.lat+'/'+$('location').dataset.lon):'',creator:$('creator').value||'miPlanr creator',start_at:$('start').value,end_at:$('end').value,deadline_at:$('deadline').value,threshold:Number($('threshold').value||3),options,calendar_options:calendarOptions,option_icons:isCalendarPoll()?options.map(x=>'📅'):enrichedOpts.map(x=>x.icon),emails:parseEmails($('emails').value)};
       $('createMsg').innerHTML='<div class="notice">Creating your smart poll…</div>';const res=await fetch(api('create-poll'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});let data={}; try{data=await res.json()}catch(e){} if(!res.ok){$('createMsg').innerHTML='<div class="notice">Error: '+(data.error||'Could not create poll')+'</div>';return}
       const link=location.origin+'/poll.html?slug='+encodeURIComponent(data.slug);$('shareLink').value=link;$('sharePanel').classList.add('visible');$('copyBtn').onclick=()=>navigator.clipboard.writeText(link);$('waBtn').onclick=()=>window.open('https://wa.me/?text='+encodeURIComponent('Please vote on my miPlanr poll: '+link),'_blank');$('openBtn').onclick=()=>window.open(link,'_blank');
       let inviteHtml='';
@@ -201,37 +235,34 @@ function initCreate(){
   }
 }
 async function initPoll(){
-  const params=new URLSearchParams(location.search);const slug=params.get('slug')||location.pathname.split('/').pop();const invite=params.get('invite')||'';const res=await fetch(api('get-poll')+'?slug='+encodeURIComponent(slug)+'&invite='+encodeURIComponent(invite));const data=await res.json();if(!res.ok){$('pollMount').innerHTML='<p>Could not load poll.</p>';return}const p=data.poll;const total=data.votes.reduce((a,v)=>a+Number(v.count),0);const voteMap=Object.fromEntries(data.votes.map(v=>[v.option_id,Number(v.count)]));const opts=p.options||[];const enriched=opts.map(o=>({ ...o, visual: miPlanrVisual.iconFor(o.option_text,p.question)}));let selected=data.my_vote?.option_id||'';
-  $('pollMount').innerHTML=`<div class="poll-card"><div class="poll-head"><div style="font-size:42px">${iconHTML(p.title+' '+p.question)}</div><h2>${p.title}</h2><p>${p.question}</p><small>${p.location||''} ${p.start_at?' • '+formatFriendlyDate(new Date(p.start_at))+' '+formatTime12(new Date(p.start_at)):''}</small></div><div class="poll-body"><p>${p.description||''}</p><div id="voteChoices"></div><input id="voterName" placeholder="Your name"><input id="voterEmail" placeholder="Your email"><div class="actions"><button class="btn" id="voteNow">${data.my_vote?'Update my vote':'Cast my vote'}</button><button class="btn secondary" id="gcal">Google Calendar</button><button class="btn secondary" id="ocal">Outlook</button></div><div id="voteMsg"></div></div></div>`;
+  const params=new URLSearchParams(location.search);const slug=params.get('slug')||location.pathname.split('/').pop();const invite=params.get('invite')||'';const res=await fetch(api('get-poll')+'?slug='+encodeURIComponent(slug)+'&invite='+encodeURIComponent(invite));const data=await res.json();if(!res.ok){$('pollMount').innerHTML='<p>Could not load poll.</p>';return}const p=data.poll;const isCal=p.poll_type==='calendar';const total=data.votes.reduce((a,v)=>a+Number(v.count),0);let voteMap=Object.fromEntries(data.votes.map(v=>[v.option_id,Number(v.count)]));const opts=p.options||[];const enriched=opts.map(o=>({ ...o, visual: miPlanrVisual.iconFor(o.option_text,p.question)}));let selected=isCal?new Set(data.my_vote?.option_ids||[]):new Set(data.my_vote?.option_id?[data.my_vote.option_id]:[]);
+  $('pollMount').innerHTML=`<div class="poll-card"><div class="poll-head"><div style="font-size:42px">${isCal?'📅':iconHTML(p.title+' '+p.question)}</div><h2>${esc(p.title)}</h2><p>${esc(p.question)}</p><small>${esc(p.location||'')} ${p.start_at?' • '+formatFriendlyDate(new Date(p.start_at))+' '+formatTime12(new Date(p.start_at)):''}</small></div><div class="poll-body"><p>${esc(p.description||'')}</p><div id="voteChoices"></div><input id="voterName" placeholder="Your name"><input id="voterEmail" placeholder="Your email"><div class="actions"><button class="btn" id="voteNow">${data.my_vote?'Update my vote':'Cast my vote'}</button><button class="btn secondary" id="gcal">Google Calendar</button><button class="btn secondary" id="ocal">Outlook</button></div><div id="voteMsg"></div><div id="calendarAddList" class="calendar-add-list"></div></div></div>`;
   mountTranslateBar('pollMount');
-  function draw(){document.getElementById('voteChoices').innerHTML=enriched.map(o=>{const c=voteMap[o.id]||0;const pct=total?Math.round(c/total*100):0;return `<label class="choice vote-option"><input type="radio" name="opt" value="${o.id}" ${selected===o.id?'checked':''}><span class="icon-badge">${iconHTMLFromResult(o.visual)}</span><div class="choice-content"><b>${esc(o.option_text || o.label || '')}</b><div class="bar" style="width:${pct}%"></div><small>${c} vote${c===1?'':'s'} • ${pct}%</small></div></label>`}).join('')+`<div class="notice">${total} of ${p.threshold||3} votes received ${total>=(p.threshold||3)?'🎉 quorum reached':''}</div>`}draw();document.querySelectorAll('input[name=opt]').forEach(r=>r.onchange=e=>selected=e.target.value); 
+  function draw(currentTotal=total,currentMap=voteMap){
+    document.getElementById('voteChoices').innerHTML=enriched.map(o=>{const c=currentMap[o.id]||0;const pct=currentTotal?Math.round(c/currentTotal*100):0;const checked=selected.has(o.id)?'checked':'';const inputType=isCal?'checkbox':'radio';return `<label class="choice vote-option"><input type="${inputType}" name="opt" value="${o.id}" ${checked}><span class="icon-badge">${isCal?'📅':iconHTMLFromResult(o.visual)}</span><div class="choice-content"><b>${esc(o.option_text || o.label || '')}</b><div class="bar" style="width:${pct}%"></div><small>${c} yes${c===1?'':'es'} • ${pct}%</small></div></label>`}).join('')+`<div class="notice">${isCal?'Calendar poll: tick every date you can do.':'One option only.'} ${currentTotal} yes response${currentTotal===1?'':'s'} received ${currentTotal>=(p.threshold||3)?'🎉 quorum reached':''}</div>`;
+    document.querySelectorAll('input[name=opt]').forEach(r=>r.onchange=e=>{if(isCal){e.target.checked?selected.add(e.target.value):selected.delete(e.target.value)}else{selected=new Set([e.target.value])}});
+  }
+  draw();
+  function optionDates(o){const s=o.start_at?new Date(o.start_at):(p.start_at?new Date(p.start_at):new Date());const e=o.end_at?new Date(o.end_at):(p.end_at?new Date(p.end_at):new Date(s.getTime()+3600000));return {s,e}}
+  function calUrlForOption(o,provider){const text=encodeURIComponent(p.title+' - '+(o.option_text||o.label||''));const details=encodeURIComponent((p.description||'')+'\nPoll: '+location.href);const loc=encodeURIComponent(p.location||p.place_label||'');const {s,e}=optionDates(o);if(provider==='google')return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${loc}&dates=${calendarLocalStamp(s)}/${calendarLocalStamp(e)}`;return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${text}&body=${details}&location=${loc}&startdt=${encodeURIComponent(localIsoNoZone(s))}&enddt=${encodeURIComponent(localIsoNoZone(e))}`}
+  function renderCalendarLinks(){
+    const chosen=enriched.filter(o=>selected.has(o.id));
+    if(!isCal||!chosen.length){$('calendarAddList').innerHTML='';return}
+    $('calendarAddList').innerHTML='<div class="notice"><b>Add your Yes dates to calendar:</b></div>'+chosen.map(o=>`<div class="choice"><span class="icon-badge">📅</span><div><b>${esc(o.option_text||o.label||'')}</b><br><a href="${calUrlForOption(o,'google')}" target="_blank">Google Calendar</a> · <a href="${calUrlForOption(o,'outlook')}" target="_blank">Outlook</a></div></div>`).join('');
+  }
   $('voteNow').onclick=async()=>{
-    if(!selected){alert('Choose an option first');return}
+    const chosen=[...selected]; if(!chosen.length){alert(isCal?'Tick at least one date you can do.':'Choose an option first');return}
     const btn=$('voteNow'); btn.disabled=true; btn.textContent='Saving vote…';
     try{
-      const rr=await fetch(api('cast-vote'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug,invite_token:invite,option_id:selected,voter_name:$('voterName').value,voter_email:$('voterEmail').value})});
+      const rr=await fetch(api('cast-vote'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug,invite_token:invite,option_id:chosen[0],option_ids:chosen,voter_name:$('voterName').value,voter_email:$('voterEmail').value})});
       let jd={}; try{jd=await rr.json()}catch(e){}
       if(!rr.ok){$('voteMsg').innerHTML='<div class="notice">Error: '+(jd.error||'Vote could not be saved')+'</div>'; return;}
-      // Force the public results to refresh after Supabase saves the vote.
-      // This avoids the old issue where the database saved correctly but the screen still showed 0 votes.
       $('voteMsg').innerHTML='<div class="notice">✅ Vote saved. Updating results…</div>';
       const fresh=await fetch(api('get-poll')+'?slug='+encodeURIComponent(slug)+'&invite='+encodeURIComponent(invite)+'&t='+Date.now());
-      if(fresh.ok){
-        const latest=await fresh.json();
-        const latestTotal=latest.votes.reduce((a,v)=>a+Number(v.count),0);
-        const latestMap=Object.fromEntries(latest.votes.map(v=>[v.option_id,Number(v.count)]));
-        document.getElementById('voteChoices').innerHTML=enriched.map(o=>{const c=latestMap[o.id]||0;const pct=latestTotal?Math.round(c/latestTotal*100):0;return `<label class="choice vote-option"><input type="radio" name="opt" value="${o.id}" ${selected===o.id?'checked':''}><span class="icon-badge">${iconHTMLFromResult(o.visual)}</span><div class="choice-content"><b>${esc(o.option_text || o.label || '')}</b><div class="bar" style="width:${pct}%"></div><small>${c} vote${c===1?'':'s'} • ${pct}%</small></div></label>`}).join('')+`<div class="notice">${latestTotal} of ${p.threshold||3} votes received ${latestTotal>=(p.threshold||3)?'🎉 quorum reached':''}</div>`;
-        document.querySelectorAll('input[name=opt]').forEach(r=>r.onchange=e=>selected=e.target.value);
-        $('voteMsg').innerHTML='<div class="notice">✅ Vote saved and results updated.</div>';
-      } else {
-        location.reload();
-      }
-    }catch(e){
-      $('voteMsg').innerHTML='<div class="notice">Error: '+e.message+'</div>';
-    }finally{
-      btn.disabled=false; btn.textContent='Update my vote';
-    }
+      if(fresh.ok){const latest=await fresh.json(); const latestTotal=latest.votes.reduce((a,v)=>a+Number(v.count),0); voteMap=Object.fromEntries(latest.votes.map(v=>[v.option_id,Number(v.count)])); draw(latestTotal,voteMap); renderCalendarLinks(); $('voteMsg').innerHTML='<div class="notice">✅ Vote saved. Add only your Yes dates to your calendar below.</div>';} else location.reload();
+    }catch(e){$('voteMsg').innerHTML='<div class="notice">Error: '+e.message+'</div>'}finally{btn.disabled=false; btn.textContent='Update my vote';}
   };
-  function calUrl(provider){const text=encodeURIComponent(p.title);const details=encodeURIComponent((p.description||'')+'\nPoll: '+location.href);const loc=encodeURIComponent(p.location||p.place_label||'');const s=p.start_at?new Date(p.start_at):new Date();const e=p.end_at?new Date(p.end_at):new Date(s.getTime()+3600000);if(provider==='google')return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${loc}&dates=${calendarLocalStamp(s)}/${calendarLocalStamp(e)}`;return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${text}&body=${details}&location=${loc}&startdt=${encodeURIComponent(localIsoNoZone(s))}&enddt=${encodeURIComponent(localIsoNoZone(e))}`}$('gcal').onclick=()=>window.open(calUrl('google'),'_blank');$('ocal').onclick=()=>window.open(calUrl('outlook'),'_blank')
+  function calUrl(provider){const text=encodeURIComponent(p.title);const details=encodeURIComponent((p.description||'')+'\nPoll: '+location.href);const loc=encodeURIComponent(p.location||p.place_label||'');const s=p.start_at?new Date(p.start_at):new Date();const e=p.end_at?new Date(p.end_at):new Date(s.getTime()+3600000);if(provider==='google')return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&details=${details}&location=${loc}&dates=${calendarLocalStamp(s)}/${calendarLocalStamp(e)}`;return `https://outlook.live.com/calendar/0/deeplink/compose?subject=${text}&body=${details}&location=${loc}&startdt=${encodeURIComponent(localIsoNoZone(s))}&enddt=${encodeURIComponent(localIsoNoZone(e))}`}
+  $('gcal').onclick=()=> isCal&&selected.size?renderCalendarLinks():window.open(calUrl('google'),'_blank');$('ocal').onclick=()=> isCal&&selected.size?renderCalendarLinks():window.open(calUrl('outlook'),'_blank'); renderCalendarLinks();
 }
 document.addEventListener('DOMContentLoaded',()=>{const page=document.body.dataset.page;if(page==='create')initCreate();if(page==='poll')initPoll()});

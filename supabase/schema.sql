@@ -146,3 +146,24 @@ end $$;
 -- cast-vote.js now updates/inserts votes safely without depending on ON CONFLICT.
 create index if not exists idx_votes_poll_invite_lookup on public.votes(poll_id, invite_token);
 create index if not exists idx_votes_poll_email_lookup on public.votes(poll_id, voter_email);
+
+-- v7.2 calendar polling: options can be date/time slots and voters can say yes to multiple slots
+alter table public.polls add column if not exists poll_type text default 'standard';
+alter table public.poll_options add column if not exists start_at timestamptz;
+alter table public.poll_options add column if not exists end_at timestamptz;
+
+create table if not exists public.calendar_poll_votes (
+  id uuid primary key default gen_random_uuid(),
+  poll_id uuid references public.polls(id) on delete cascade,
+  option_id uuid references public.poll_options(id) on delete cascade,
+  participant_id uuid references public.participants(id) on delete set null,
+  invite_token text,
+  voter_name text,
+  voter_email text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+create index if not exists idx_calendar_poll_votes_poll on public.calendar_poll_votes(poll_id);
+create index if not exists idx_calendar_poll_votes_option on public.calendar_poll_votes(option_id);
+create index if not exists idx_calendar_poll_votes_invite on public.calendar_poll_votes(poll_id, invite_token);
+create index if not exists idx_calendar_poll_votes_email on public.calendar_poll_votes(poll_id, voter_email);
