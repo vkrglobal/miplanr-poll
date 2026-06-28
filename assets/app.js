@@ -76,8 +76,14 @@ function updateStandardWhenRow(){
   if(!$('standardWhenRow')) return;
   const s=$('start')?.value?new Date($('start').value):fromDateTimeParts('startDate','startTime','08:00');
   const e=$('end')?.value?new Date($('end').value):null;
-  if(s && !isNaN(s)){ $('standardDateBtn').innerHTML='<span class="pill-icon">📅</span><span class="pill-copy"><small>Select date</small><b>'+formatLongDayDate(s)+'</b></span>'; $('standardStartBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>Start time</small><b>'+formatTime12Compact(s)+'</b></span>'; }
+  if(s && !isNaN(s)){
+    $('standardDateBtn').innerHTML='<span class="pill-icon">📅</span><span class="pill-copy"><small>Select date</small><b>'+formatLongDayDate(s)+'</b></span>';
+    $('standardStartBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>Start time</small><b>'+formatTime12Compact(s)+'</b></span>';
+  }
   if(e && !isNaN(e)) $('standardEndBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>End time</small><b>'+formatTime12Compact(e)+'</b></span>';
+  if($('whenSummaryBadge')){
+    $('whenSummaryBadge').textContent=(s && !isNaN(s)) ? (formatFriendlyDate(s)+' '+formatTime12Compact(s)+(e && !isNaN(e)?' - '+formatTime12Compact(e):'')) : 'Date/time';
+  }
 }
 function standardCalendarBridge(){
   const s=$('start')?.value?new Date($('start').value):nextHalfHour();
