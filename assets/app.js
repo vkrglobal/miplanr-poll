@@ -85,33 +85,78 @@ function optionRow(v=''){
 
 function calendarOptionRow(data={}){
   const d = data.start ? new Date(data.start) : nextHalfHour();
-  const e = data.end ? new Date(data.end) : new Date(d.getTime()+60*60000);
+  const mins = data.duration_minutes || Math.max(15, Math.round(((data.end?new Date(data.end):new Date(d.getTime()+60*60000))-d)/60000)) || 60;
   const row=document.createElement('div'); row.className='calendar-option-row';
-  row.innerHTML=`<div><label>Date</label><input class="calDate" type="date" value="${dateISO(d)}"></div><div><label>Start time</label><input class="calStart" type="text" placeholder="8:00 am" value="${formatTime12(d)}"></div><div><label>End time</label><input class="calEnd" type="text" placeholder="9:00 am" value="${formatTime12(e)}"></div><button type="button" class="btn secondary">×</button>`;
-  row.querySelector('button').onclick=()=>{row.remove();renderPreview()};
-  row.querySelectorAll('input').forEach(i=>i.oninput=renderPreview);
+  row.innerHTML=`<div class="cal-summary"><span class="icon-badge">📅</span><strong class="calLabel"></strong><small>Select a date, start time and duration</small></div><div><label>Date</label><input class="calDate" type="date" value="${dateISO(d)}"></div><div><label>Start time</label><input class="calStart" type="text" placeholder="8:00 am" value="${formatTime12(d)}"></div><div><label>Duration</label><select class="calDuration"><option value="30">30 mins</option><option value="45">45 mins</option><option value="60">1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option><option value="180">3 hours</option><option value="240">4 hours</option><option value="480">Full day</option></select></div><button type="button" class="btn secondary calOpen">Open calendar</button><button type="button" class="btn secondary calRemove">×</button>`;
+  row.querySelector('.calDuration').value=String([30,45,60,90,120,180,240,480].includes(mins)?mins:60);
+  const refresh=()=>{const opt=calendarOptionFromRow(row);row.querySelector('.calLabel').textContent=opt?opt.label:'Choose date/time';renderPreview()};
+  row.querySelector('.calRemove').onclick=()=>{row.remove();renderPreview()};
+  row.querySelector('.calOpen').onclick=()=>openCalendarPicker(row);
+  row.querySelectorAll('input,select').forEach(i=>i.addEventListener('input',refresh));
+  refresh();
   return row;
+}
+function calendarOptionFromRow(row){
+  const dd=parseFriendlyDate(row.querySelector('.calDate')?.value||''); if(!dd) return null;
+  const st=parseTime12(row.querySelector('.calStart')?.value||'','08:00');
+  const dur=Number(row.querySelector('.calDuration')?.value||60);
+  const start=new Date(dateISO(dd)+'T'+st), end=new Date(start.getTime()+dur*60000);
+  return {label:formatFriendlyDate(start)+' '+formatTime12(start)+' - '+formatTime12(end), start_at:toOffsetDateTime(start), end_at:toOffsetDateTime(end), duration_minutes:dur};
+}
+function openCalendarPicker(row){
+  let modal=$('calPickerModal');
+  if(!modal){
+    modal=document.createElement('div'); modal.id='calPickerModal'; modal.className='cal-modal';
+    modal.innerHTML=`<div class="cal-dialog"><div class="cal-dialog-head"><strong>Choose calendar option</strong><button type="button" class="btn secondary" id="calClose">×</button></div><div class="cal-tabs"><button type="button" class="mini-chip active" data-view="month">Month</button><button type="button" class="mini-chip" data-view="week">Week</button><button type="button" class="mini-chip" data-view="day">Day</button></div><div id="calPickerBody"></div><div class="row"><div><label>Start time</label><input id="calPickTime" type="text" placeholder="8:00 am"></div><div><label>Duration</label><select id="calPickDuration"><option value="30">30 mins</option><option value="45">45 mins</option><option value="60">1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option><option value="180">3 hours</option><option value="240">4 hours</option><option value="480">Full day</option></select></div></div><div class="actions"><button type="button" class="btn" id="calApply">Use this date/time</button></div></div>`;
+    document.body.appendChild(modal);
+  }
+  let current=parseFriendlyDate(row.querySelector('.calDate').value)||new Date();
+  $('calPickTime').value=row.querySelector('.calStart').value||'8:00 am';
+  $('calPickDuration').value=row.querySelector('.calDuration').value||'60';
+  let view='month';
+  const draw=()=>{
+    modal.querySelectorAll('.cal-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
+    const body=$('calPickerBody');
+    if(view==='month'){
+      const first=new Date(current.getFullYear(),current.getMonth(),1), start=new Date(first); start.setDate(start.getDate()-((start.getDay()+6)%7));
+      let cells=''; for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);cells+=`<button type="button" class="cal-day ${d.getMonth()!==current.getMonth()?'muted':''} ${dateISO(d)===dateISO(current)?'active':''}" data-date="${dateISO(d)}"><b>${d.getDate()}</b><small>${MONTHS[d.getMonth()]}</small></button>`}
+      body.innerHTML=`<div class="cal-nav"><button type="button" class="btn secondary" id="calPrev">‹</button><strong>${MONTHS[current.getMonth()]} ${current.getFullYear()}</strong><button type="button" class="btn secondary" id="calNext">›</button></div><div class="cal-grid">${cells}</div>`;
+      $('calPrev').onclick=()=>{current.setMonth(current.getMonth()-1);draw()}; $('calNext').onclick=()=>{current.setMonth(current.getMonth()+1);draw()};
+      body.querySelectorAll('.cal-day').forEach(b=>b.onclick=()=>{current=parseFriendlyDate(b.dataset.date); view='day'; draw()});
+    } else if(view==='week'){
+      const start=new Date(current); start.setDate(start.getDate()-((start.getDay()+6)%7));
+      let cells=''; for(let i=0;i<7;i++){const d=new Date(start);d.setDate(start.getDate()+i);cells+=`<button type="button" class="cal-day ${dateISO(d)===dateISO(current)?'active':''}" data-date="${dateISO(d)}"><b>${['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]}</b><small>${d.getDate()} ${MONTHS[d.getMonth()]}</small></button>`}
+      body.innerHTML=`<div class="cal-nav"><button type="button" class="btn secondary" id="calPrev">‹ week</button><strong>Week of ${formatFriendlyDate(start)}</strong><button type="button" class="btn secondary" id="calNext">week ›</button></div><div class="cal-grid week">${cells}</div>`;
+      $('calPrev').onclick=()=>{current.setDate(current.getDate()-7);draw()}; $('calNext').onclick=()=>{current.setDate(current.getDate()+7);draw()};
+      body.querySelectorAll('.cal-day').forEach(b=>b.onclick=()=>{current=parseFriendlyDate(b.dataset.date); view='day'; draw()});
+    } else {
+      const slots=[]; for(let h=6;h<=22;h++){const d=new Date(current);d.setHours(h,0,0,0);slots.push(`<button type="button" class="mini-chip cal-slot" data-time="${formatTime12(d)}">${formatTime12(d)}</button>`)}
+      body.innerHTML=`<div class="cal-nav"><button type="button" class="btn secondary" id="calPrev">‹ day</button><strong>${formatFriendlyDate(current)}</strong><button type="button" class="btn secondary" id="calNext">day ›</button></div><div class="cal-slots">${slots.join('')}</div>`;
+      $('calPrev').onclick=()=>{current.setDate(current.getDate()-1);draw()}; $('calNext').onclick=()=>{current.setDate(current.getDate()+1);draw()};
+      body.querySelectorAll('.cal-slot').forEach(b=>b.onclick=()=>{$('calPickTime').value=b.dataset.time});
+    }
+  };
+  modal.querySelectorAll('.cal-tabs button').forEach(b=>b.onclick=()=>{view=b.dataset.view;draw()});
+  $('calClose').onclick=()=>modal.classList.remove('open');
+  $('calApply').onclick=()=>{row.querySelector('.calDate').value=dateISO(current);row.querySelector('.calStart').value=$('calPickTime').value;row.querySelector('.calDuration').value=$('calPickDuration').value;row.querySelectorAll('input,select')[0].dispatchEvent(new Event('input'));modal.classList.remove('open')};
+  draw(); modal.classList.add('open');
 }
 function isCalendarPoll(){return $('pollType')?.value==='calendar'}
 function getCalendarOptions(){
-  return [...document.querySelectorAll('.calendar-option-row')].map(row=>{
-    const dd=parseFriendlyDate(row.querySelector('.calDate')?.value||''); if(!dd) return null;
-    const st=parseTime12(row.querySelector('.calStart')?.value||'','08:00');
-    const et=parseTime12(row.querySelector('.calEnd')?.value||'','09:00');
-    let start=new Date(dateISO(dd)+'T'+st), end=new Date(dateISO(dd)+'T'+et); if(end<=start) end=new Date(start.getTime()+60*60000);
-    return {label:formatFriendlyDate(start)+' '+formatTime12(start)+' - '+formatTime12(end), start_at:toOffsetDateTime(start), end_at:toOffsetDateTime(end)};
-  }).filter(Boolean);
+  return [...document.querySelectorAll('.calendar-option-row')].map(calendarOptionFromRow).filter(Boolean);
 }
 function resetOptionsForMode(){
   if(!$('options')) return; $('options').innerHTML='';
+  const dateCard=document.querySelector('.datetime-card');
+  if(dateCard) dateCard.hidden=isCalendarPoll();
   if(isCalendarPoll()){
-    if($('optionsLabel')) $('optionsLabel').textContent='Date/time options';
-    if($('optionsHint')) $('optionsHint').textContent='Choose each option from a calendar. Voters can tick Yes for every date they can attend/help/play.';
+    if($('optionsLabel')) $('optionsLabel').textContent='Calendar date/time options';
+    if($('optionsHint')) $('optionsHint').textContent='Each option has its own date, start time and duration. Use Open calendar for month, week or day style selection. Voters can tick Yes for every date they can do.';
     [0,1,2].forEach(i=>{const d=nextHalfHour(); d.setDate(d.getDate()+i); $('options').appendChild(calendarOptionRow({start:d,end:new Date(d.getTime()+60*60000)}));});
   } else {
     if($('optionsLabel')) $('optionsLabel').textContent='Options';
     if($('optionsHint')) $('optionsHint').textContent='Add the choices. miPlanr automatically adds flags/icons, foods, drinks, sports teams and travel icons.';
-    resetOptionsForMode(); $('pollType')?.addEventListener('change', resetOptionsForMode);
+    ['Option 1','Option 2','Option 3'].forEach(v=>$('options').appendChild(optionRow(v)));
   }
   renderPreview();
 }
@@ -213,7 +258,8 @@ function initCreate(){
   document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',renderPreview));
   $('addOption').onclick=()=>{$('options').appendChild(isCalendarPoll()?calendarOptionRow():optionRow());renderPreview()}; $('previewBtn').onclick=renderPreview;
   $('translateBtn').onclick=()=>openTranslatePanel('pollForm');
-  $('location').addEventListener('input',async e=>{const box=$('placeSuggestions');const items=await suggestPlaces(e.target.value);box.innerHTML=items.slice(0,5).map(p=>`<button type="button" data-lat="${p.lat||''}" data-lon="${p.lon||''}">${p.label||p.display_name}</button>`).join('');box.style.display=items.length?'block':'none';box.querySelectorAll('button').forEach(b=>b.onclick=()=>{$('location').value=b.textContent;$('location').dataset.lat=b.dataset.lat||'';$('location').dataset.lon=b.dataset.lon||'';box.style.display='none';renderPreview()})});
+  $('pollForm')?.addEventListener('keydown',e=>{if(e.key==='Enter' && e.target && e.target.tagName==='INPUT'){e.preventDefault();}});
+  $('location').addEventListener('input',async e=>{const box=$('placeSuggestions');const typed=e.target.value;const items=await suggestPlaces(typed); if(e.target.value!==typed)return; box.innerHTML=items.slice(0,5).map(p=>`<button type="button" data-lat="${p.lat||''}" data-lon="${p.lon||''}">${p.label||p.display_name}</button>`).join('');box.style.display=items.length?'block':'none';box.querySelectorAll('button').forEach(b=>b.onclick=()=>{$('location').value=b.textContent;$('location').dataset.lat=b.dataset.lat||'';$('location').dataset.lon=b.dataset.lon||'';box.style.display='none';renderPreview()})});
   renderPreview();
   $('pollForm').onsubmit=async ev=>{
     ev.preventDefault(); syncHiddenDateTimes(); const btn=ev.submitter||document.querySelector('button[type=submit]'); btn.disabled=true;
