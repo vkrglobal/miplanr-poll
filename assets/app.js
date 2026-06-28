@@ -76,7 +76,7 @@ function updateStandardWhenRow(){
   if(!$('standardWhenRow')) return;
   const s=$('start')?.value?new Date($('start').value):fromDateTimeParts('startDate','startTime','08:00');
   const e=$('end')?.value?new Date($('end').value):null;
-  if(s && !isNaN(s)){ $('standardDateBtn').innerHTML='<span class="pill-icon">📅</span><span class="pill-copy"><small>Select date</small><b>'+formatLongDayDate(s)+'</b></span>'; $('standardStartBtn').innerHTML='<span class="pill-icon">🗓️</span><span class="pill-copy"><small>Start time</small><b>'+formatTime12Compact(s)+'</b></span>'; }
+  if(s && !isNaN(s)){ $('standardDateBtn').innerHTML='<span class="pill-icon">📅</span><span class="pill-copy"><small>Select date</small><b>'+formatLongDayDate(s)+'</b></span>'; $('standardStartBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>Start time</small><b>'+formatTime12Compact(s)+'</b></span>'; }
   if(e && !isNaN(e)) $('standardEndBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>End time</small><b>'+formatTime12Compact(e)+'</b></span>';
 }
 function standardCalendarBridge(){
@@ -84,7 +84,7 @@ function standardCalendarBridge(){
   const e=$('end')?.value?new Date($('end').value):new Date(s.getTime()+durationMinutes()*60000);
   const row=document.createElement('div');
   row.innerHTML=`<input class="calDate" type="date" value="${dateISO(s)}"><input class="calStart" type="text" value="${formatTime12(s)}"><select class="calDuration"><option value="30">30 mins</option><option value="45">45 mins</option><option value="60">1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option><option value="180">3 hours</option><option value="240">4 hours</option><option value="480">Full day</option></select>`;
-  const mins=Math.max(30,Math.round((e-s)/60000)); row.querySelector('.calDuration').value=String([30,45,60,90,120,180,240,480].includes(mins)?mins:60);
+  const mins=Math.max(30,Math.round((e-s)/60000)); setRowDuration(row, mins);
   openCalendarPicker(row);
   const apply=$('calApply'); const old=apply.onclick;
   apply.onclick=()=>{ old(); const opt=calendarOptionFromRow(row); if(opt){ const ns=new Date(opt.start_at), ne=new Date(opt.end_at); setDateTimeParts('start',ns); setDateTimeParts('end',ne); const d=new Date(ns.getTime()-24*3600000); if(d<new Date()) d.setTime(Date.now()+2*3600000); setDateTimeParts('deadline',d); if($('quickDate')) $('quickDate').value='custom'; if($('startDateWrap')) $('startDateWrap').hidden=false; syncHiddenDateTimes(); renderPreview(); } };
@@ -111,6 +111,14 @@ const CALENDAR_ICON_PACKS={
 function calendarIconForIndex(i){const theme=$('calendarIconTheme')?.value||'calendar';const pack=CALENDAR_ICON_PACKS[theme]||CALENDAR_ICON_PACKS.calendar;return pack[i%pack.length]||'📅'}
 function refreshCalendarOptionIcons(){document.querySelectorAll('.calendar-option-row').forEach((row,i)=>{const b=row.querySelector('.cal-row-icon');if(b)b.textContent=calendarIconForIndex(i)});renderPreview()}
 function calendarDisplayLabel(start,end){return `${formatLongDayDate(start)} ${formatTime12(start)} - ${formatTime12(end)}`}
+function setRowDuration(row, mins){
+  const sel=row.querySelector('.calDuration'); if(!sel) return;
+  mins=Math.max(30, Math.round(Number(mins)||60));
+  if(![...sel.options].some(o=>Number(o.value)===mins)){
+    const opt=document.createElement('option'); opt.value=String(mins); opt.textContent=mins<60?mins+' mins':(mins/60)+' hours'; sel.appendChild(opt);
+  }
+  sel.value=String(mins);
+}
 
 function optionRow(v=''){
   const row=document.createElement('div');row.className='option-row';row.innerHTML=`<span class="icon-badge">✨</span><input class="opt" placeholder="e.g. New Zealand, NZ, UK, Greece, Tomato, Mango, Football" value="${String(v).replace(/"/g,'&quot;')}"><button type="button" class="btn secondary">×</button>`;
@@ -123,10 +131,12 @@ function calendarOptionRow(data={}){
   const mins = data.duration_minutes || Math.max(15, Math.round(((data.end?new Date(data.end):new Date(d.getTime()+60*60000))-d)/60000)) || 60;
   const row=document.createElement('div'); row.className='calendar-option-row calendar-option-card';
   row.innerHTML=`<span class="icon-badge cal-row-icon">📅</span><input class="calDate" type="date" value="${dateISO(d)}" hidden><input class="calStart" type="text" value="${formatTime12(d)}" hidden><select class="calDuration" hidden><option value="30">30 mins</option><option value="45">45 mins</option><option value="60">1 hour</option><option value="90">1.5 hours</option><option value="120">2 hours</option><option value="180">3 hours</option><option value="240">4 hours</option><option value="480">Full day</option></select><button type="button" class="cal-pill cal-date-pill calOpen" aria-label="Choose date"></button><button type="button" class="cal-pill cal-start-pill calOpen" aria-label="Choose start time"></button><button type="button" class="cal-pill cal-end-pill calOpen" aria-label="Choose end time"></button><button type="button" class="btn secondary calRemove" aria-label="Remove option">×</button>`;
-  row.querySelector('.calDuration').value=String([30,45,60,90,120,180,240,480].includes(mins)?mins:60);
-  const refresh=()=>{const opt=calendarOptionFromRow(row); if(opt){const sdt=new Date(opt.start_at), edt=new Date(opt.end_at); const idx=[...document.querySelectorAll('.calendar-option-row')].indexOf(row); const ic=calendarIconForIndex(Math.max(0,idx)); row.querySelector('.cal-row-icon').textContent=ic; row.querySelector('.cal-date-pill').innerHTML='<small>📅 Select date</small><b>'+formatLongDayDate(sdt)+'</b>'; row.querySelector('.cal-start-pill').innerHTML='<small>🗓️ Start time</small><b>'+formatTime12Compact(sdt)+'</b>'; row.querySelector('.cal-end-pill').innerHTML='<small>🕒 End time</small><b>'+formatTime12Compact(edt)+'</b>';} renderPreview()};
+  setRowDuration(row, mins);
+  const refresh=()=>{const opt=calendarOptionFromRow(row); if(opt){const sdt=new Date(opt.start_at), edt=new Date(opt.end_at); const idx=[...document.querySelectorAll('.calendar-option-row')].indexOf(row); const ic=calendarIconForIndex(Math.max(0,idx)); row.querySelector('.cal-row-icon').textContent=ic; row.querySelector('.cal-date-pill').innerHTML='<small>📅 Select date</small><b>'+formatLongDayDate(sdt)+'</b>'; row.querySelector('.cal-start-pill').innerHTML='<small>🕒 Start time</small><b>'+formatTime12Compact(sdt)+'</b>'; row.querySelector('.cal-end-pill').innerHTML='<small>🕒 End time</small><b>'+formatTime12Compact(edt)+'</b>';} renderPreview()};
   row.querySelector('.calRemove').onclick=()=>{row.remove();renderPreview()};
-  row.querySelectorAll('.calOpen').forEach(b=>b.onclick=()=>openCalendarPicker(row));
+  row.querySelector('.cal-date-pill').onclick=()=>openCalendarDatePicker(row);
+  row.querySelector('.cal-start-pill').onclick=()=>openCalendarRowTimePicker(row,'start');
+  row.querySelector('.cal-end-pill').onclick=()=>openCalendarRowTimePicker(row,'end');
   row.querySelectorAll('input,select').forEach(i=>i.addEventListener('input',refresh));
   refresh();
   return row;
@@ -138,6 +148,45 @@ function calendarOptionFromRow(row){
   const start=new Date(dateISO(dd)+'T'+st), end=new Date(start.getTime()+dur*60000);
   return {label:calendarDisplayLabel(start,end), start_at:toOffsetDateTime(start), end_at:toOffsetDateTime(end), duration_minutes:dur};
 }
+
+function openCalendarDatePicker(row){
+  let current=parseFriendlyDate(row.querySelector('.calDate')?.value)||new Date();
+  const draw=()=>{
+    const first=new Date(current.getFullYear(),current.getMonth(),1), start=new Date(first); start.setDate(start.getDate()-((start.getDay()+6)%7));
+    let cells=''; for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);cells+=`<button type="button" class="clean-cal-day ${d.getMonth()!==current.getMonth()?'muted':''} ${dateISO(d)===dateISO(current)?'active':''}" data-date="${dateISO(d)}"><b>${d.getDate()}</b><small>${MONTHS[d.getMonth()]}</small></button>`}
+    const modal=modalShell('calendarRowDateModal','date-only',`<div class="clean-calendar-card"><div class="clean-cal-nav"><button type="button" class="clean-nav" id="rowCalPrev">‹</button><strong>${MONTHS[current.getMonth()]} ${current.getFullYear()}</strong><button type="button" class="clean-nav" id="rowCalNext">›</button></div><div class="clean-weekdays"><b>Mon</b><b>Tue</b><b>Wed</b><b>Thu</b><b>Fri</b><b>Sat</b><b>Sun</b></div><div class="clean-cal-grid">${cells}</div></div>`);
+    $('rowCalPrev').onclick=()=>{current.setMonth(current.getMonth()-1);draw()};
+    $('rowCalNext').onclick=()=>{current.setMonth(current.getMonth()+1);draw()};
+    modal.querySelectorAll('.clean-cal-day').forEach(b=>b.onclick=()=>{
+      const d=parseFriendlyDate(b.dataset.date); row.querySelector('.calDate').value=dateISO(d);
+      row.querySelector('.calDate').dispatchEvent(new Event('input')); modal.classList.remove('open');
+    });
+  };
+  draw();
+}
+function openCalendarRowTimePicker(row,which){
+  const opt=calendarOptionFromRow(row); const base=opt?new Date(which==='end'?opt.end_at:opt.start_at):new Date();
+  const day=parseFriendlyDate(row.querySelector('.calDate')?.value)||base;
+  const selected=formatTime12(base);
+  const slots=timeSlots().map(t=>`<button type="button" class="day-time-slot ${t===selected?'active':''}" data-time="${t}"><span>${t}</span></button>`).join('');
+  const modal=modalShell('calendarRowTimeModal','time-only',`<div class="clean-time-card"><div class="time-head"><strong>${which==='start'?'Start':'End'} time • ${formatLongDayDate(day)}</strong><button type="button" class="clean-nav" id="rowTimeClose">×</button></div><div class="day-calendar-slots half-hour-slots">${slots}</div></div>`);
+  $('rowTimeClose').onclick=()=>modal.classList.remove('open');
+  modal.querySelectorAll('.day-time-slot').forEach(b=>b.onclick=()=>{
+    if(which==='start'){
+      const old=calendarOptionFromRow(row); const oldDur=old?Math.max(30,(new Date(old.end_at)-new Date(old.start_at))/60000):60;
+      row.querySelector('.calStart').value=b.dataset.time; setRowDuration(row, oldDur);
+    } else {
+      const dd=parseFriendlyDate(row.querySelector('.calDate').value)||new Date();
+      const start=new Date(dateISO(dd)+'T'+parseTime12(row.querySelector('.calStart').value,'08:00'));
+      const end=new Date(dateISO(dd)+'T'+parseTime12(b.dataset.time,'09:00'));
+      let mins=Math.round((end-start)/60000); if(mins<=0) mins+=24*60; mins=Math.max(30,mins);
+      setRowDuration(row, mins);
+    }
+    row.querySelector('.calStart').dispatchEvent(new Event('input')); modal.classList.remove('open');
+  });
+  const active=modal.querySelector('.day-time-slot.active'); if(active) active.scrollIntoView({block:'center'});
+}
+
 function openCalendarPicker(row){
   let modal=$('calPickerModal');
   if(!modal){
@@ -199,8 +248,8 @@ function resetOptionsForMode(){
 
 function renderPreview(){
   if(!$('pTitle'))return; syncHiddenDateTimes();
-  const title=$('title').value||'Your event title';const q=$('question').value||'Your question will appear here';const loc=$('location').value||'Location';const st=$('start').value?new Date($('start').value):null;
-  $('pTitle').textContent=title;$('pQuestion').textContent=q;$('pMeta').textContent=`${loc} • ${st?formatFriendlyDate(st)+' '+formatTime12(st):'Date/time'}`;$('pIcon').innerHTML=iconHTML(title+' '+q);
+  const title=$('title').value||'Your event title';const q=$('question').value||'Your question will appear here';const loc=$('location').value||'Location';const st=$('start').value?new Date($('start').value):null; const en=$('end').value?new Date($('end').value):null;
+  $('pTitle').textContent=title;$('pQuestion').textContent=q;$('pMeta').textContent=`${loc} • ${st?formatFriendlyDate(st)+' '+formatTime12(st)+(en?' - '+formatTime12(en):''):'Date/time'}`;$('pIcon').innerHTML=iconHTML(title+' '+q);
   const opts=isCalendarPoll()?getCalendarOptions().map(o=>o.label):[...document.querySelectorAll('.opt')].map(i=>i.value).filter(Boolean);$('pOptions').innerHTML=(opts.length?miPlanrVisual.enrichOptions(opts,q):[{icon:'✨',label:'Option preview'}]).map((o,i)=>`<div class="choice"><span class="icon-badge">${isCalendarPoll()?calendarIconForIndex(i):iconHTML(o.label, q)}</span><div><b>${esc(o.label)}</b><div class="bar" style="width:0%"></div><small>${isCalendarPoll()?'Yes / available':'0%'}</small></div></div>`).join('')
 }
 async function suggestPlaces(q){if(!q||q.length<3)return [];try{const r=await fetch(api('place-suggest')+'?q='+encodeURIComponent(q));return await r.json()}catch(e){return[]}}
@@ -331,14 +380,11 @@ function openStandardDatePicker(){
   draw();
 }
 function timeSlots(){
-  const out=['12:01 am'];
-  for(let h=0;h<24;h++) for(const m of [30,0]){
-    if(h===0 && m===0) continue;
+  const out=[];
+  for(let h=0;h<24;h++) for(const m of [0,30]){
     const d=new Date(); d.setHours(h,m,0,0);
-    const t=formatTime12(d);
-    if(!out.includes(t)) out.push(t);
+    out.push(formatTime12(d));
   }
-  out.push('11:59 pm');
   return out;
 }
 function openStandardTimePicker(which){
