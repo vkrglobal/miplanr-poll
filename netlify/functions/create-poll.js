@@ -13,7 +13,8 @@ exports.handler=async(event)=>{
       location:body.location||'',address_line1:body.address_line1||'',city:body.city||'',postcode:body.postcode||'',place_label:body.place_label||body.location||'',
       place_lat:body.place_lat||null,place_lon:body.place_lon||null,maps_url:body.maps_url||'',
       start_at:body.start_at||null,end_at:body.end_at||null,deadline_at:body.deadline_at||null,
-      threshold:body.threshold||3,poll_type:body.poll_type||'standard',allow_vote_edit:true,notify_on_quorum:true
+      threshold:body.threshold||3,poll_type:body.poll_type||'standard',allow_vote_edit:true,notify_on_quorum:true,
+      admin_token: token(), results_visible: body.results_visible !== false, roster_webhook_url: body.roster_webhook_url || ''
     };
     const {data:p,error:e}=await sb.from('polls').insert(poll).select('*').single();
     if(e)throw e;
@@ -32,7 +33,7 @@ exports.handler=async(event)=>{
     const invite_status=await sendInvites(p,inviteRows);
     const origin=(process.env.URL||process.env.SITE_URL||'https://miplanr.com').replace(/\/$/,'');
     const invite_links=inviteRows.map(part=>({email:part.email,link:`${origin}/poll.html?slug=${encodeURIComponent(p.slug)}&invite=${encodeURIComponent(part.invite_token)}`}));
-    return {statusCode:200,body:JSON.stringify({slug:p.slug,id:p.id,invite_status,invite_links})}
+    return {statusCode:200,body:JSON.stringify({slug:p.slug,id:p.id,admin_token:p.admin_token,invite_status,invite_links})}
   }catch(err){return {statusCode:500,body:JSON.stringify({error:err.message})}}
 }
 

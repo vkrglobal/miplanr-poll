@@ -64,3 +64,11 @@ body{top:0!important}
 .calendar-option-card .cal-dash{font-size:20px;color:#667085;margin:0 4px}
 .calendar-option-card .calRemove{min-height:52px;padding:0 14px;border-radius:6px}
 @media(max-width:640px){.calendar-option-card{display:grid!important;grid-template-columns:1fr auto 1fr;gap:8px}.calendar-option-card .cal-date-pill{grid-column:1/-1;width:100%;min-width:0}.calendar-option-card .cal-start-pill,.calendar-option-card .cal-end-pill{min-width:0;width:100%}.calendar-option-card .calRemove{grid-column:1/-1;width:100%}}
+
+
+/* v7.5 admin results and roster sync */
+.admin-create-card,.admin-panel,.results-panel{background:#f7fbff;border:1px solid var(--border);border-radius:18px;padding:14px;margin:16px 0}
+.toggle-line{display:flex;gap:10px;align-items:center;font-weight:900;margin:8px 0}.toggle-line input{width:auto}
+.results-table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px;background:white;margin-top:10px}
+.results-table{width:100%;border-collapse:collapse;font-size:14px}.results-table th,.results-table td{padding:10px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}.results-table th{background:#f2f6ff;color:var(--navy)}
+.status-pill{display:inline-flex;align-items:center;border-radius:999px;padding:6px 10px;background:#eef7ff;border:1px solid #d7e7ff;font-size:12px;font-weight:900;color:var(--navy)}

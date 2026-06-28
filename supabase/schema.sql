@@ -167,3 +167,12 @@ create index if not exists idx_calendar_poll_votes_poll on public.calendar_poll_
 create index if not exists idx_calendar_poll_votes_option on public.calendar_poll_votes(option_id);
 create index if not exists idx_calendar_poll_votes_invite on public.calendar_poll_votes(poll_id, invite_token);
 create index if not exists idx_calendar_poll_votes_email on public.calendar_poll_votes(poll_id, voter_email);
+
+-- v7.5 admin results, team access toggle, export/sync support
+alter table public.polls add column if not exists admin_token text;
+alter table public.polls add column if not exists results_visible boolean default true;
+alter table public.polls add column if not exists roster_webhook_url text;
+create index if not exists idx_polls_admin_token on public.polls(admin_token);
+
+-- Backfill admin tokens for older polls that do not yet have one
+update public.polls set admin_token = encode(gen_random_bytes(12), 'hex') where admin_token is null;
