@@ -176,3 +176,6 @@ create index if not exists idx_polls_admin_token on public.polls(admin_token);
 
 -- Backfill admin tokens for older polls that do not yet have one
 update public.polls set admin_token = encode(gen_random_bytes(12), 'hex') where admin_token is null;
+
+-- v7.7 roster sync type persistence
+alter table public.polls add column if not exists roster_sync_type text default 'none';

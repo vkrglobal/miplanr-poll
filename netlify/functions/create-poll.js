@@ -14,7 +14,7 @@ exports.handler=async(event)=>{
       place_lat:body.place_lat||null,place_lon:body.place_lon||null,maps_url:body.maps_url||'',
       start_at:body.start_at||null,end_at:body.end_at||null,deadline_at:body.deadline_at||null,
       threshold:body.threshold||3,poll_type:body.poll_type||'standard',allow_vote_edit:true,notify_on_quorum:true,
-      admin_token: token(), results_visible: body.results_visible !== false, roster_webhook_url: body.roster_webhook_url || ''
+      admin_token: token(), results_visible: body.results_visible !== false, roster_sync_type: body.roster_sync_type || 'none', roster_webhook_url: body.roster_webhook_url || ''
     };
     const {data:p,error:e}=await sb.from('polls').insert(poll).select('*').single();
     if(e)throw e;

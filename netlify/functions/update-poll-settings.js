@@ -7,6 +7,7 @@ exports.handler=async(event)=>{
     const patch={updated_at:new Date().toISOString()};
     if(typeof b.results_visible==='boolean') patch.results_visible=b.results_visible;
     if(typeof b.roster_webhook_url==='string') patch.roster_webhook_url=b.roster_webhook_url;
+    if(typeof b.roster_sync_type==='string') patch.roster_sync_type=b.roster_sync_type;
     const {data:updated,error:ue}=await sb.from('polls').update(patch).eq('id',p.id).select('*').single(); if(ue)throw ue;
     return {statusCode:200,body:JSON.stringify({ok:true,poll:updated})}
   }catch(err){return {statusCode:400,body:JSON.stringify({error:err.message})}}

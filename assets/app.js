@@ -268,16 +268,88 @@ function mountTranslateBar(hostId){
 }
 function openTranslatePanel(hostId){ mountTranslateBar(hostId); applyWholePageTranslation($('translateLang')?.value||'es'); }
 
+function currentTimeForDate(d){
+  const now=new Date();
+  if(dateISO(d)===dateISO(now)) return formatTime12(now);
+  return '8:00 am';
+}
+function setupCleanStandardWhen(){
+  if(!$('startDate')) return;
+  const today=new Date();
+  const start=new Date(today);
+  start.setSeconds(0,0);
+  const end=new Date(start.getTime()+60*60000);
+  setDateTimeParts('start',start);
+  setDateTimeParts('end',end);
+  const deadline=new Date(start.getTime()-24*3600000);
+  if(deadline<new Date()) deadline.setTime(Date.now()+2*3600000);
+  setDateTimeParts('deadline',deadline);
+  syncHiddenDateTimes();
+  if($('standardDateBtn')) $('standardDateBtn').onclick=()=>openStandardDatePicker();
+  if($('standardStartBtn')) $('standardStartBtn').onclick=()=>openStandardTimePicker('start');
+  if($('standardEndBtn')) $('standardEndBtn').onclick=()=>openStandardTimePicker('end');
+}
+function modalShell(id, cls, inner){
+  let m=$(id);
+  if(!m){m=document.createElement('div');m.id=id;m.className='cal-modal clean-modal '+(cls||'');document.body.appendChild(m)}
+  m.innerHTML=inner; m.classList.add('open');
+  m.addEventListener('click', e=>{if(e.target===m)m.classList.remove('open')},{once:true});
+  return m;
+}
+function openStandardDatePicker(){
+  let current=parseFriendlyDate($('startDate')?.value)||new Date();
+  const draw=()=>{
+    const first=new Date(current.getFullYear(),current.getMonth(),1), start=new Date(first); start.setDate(start.getDate()-((start.getDay()+6)%7));
+    let cells=''; for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);cells+=`<button type="button" class="clean-cal-day ${d.getMonth()!==current.getMonth()?'muted':''} ${dateISO(d)===dateISO(current)?'active':''}" data-date="${dateISO(d)}"><b>${d.getDate()}</b><small>${MONTHS[d.getMonth()]}</small></button>`}
+    const modal=modalShell('standardDateModal','date-only',`<div class="clean-calendar-card"><div class="clean-cal-nav"><button type="button" class="clean-nav" id="stdCalPrev">‹</button><strong>${MONTHS[current.getMonth()]} ${current.getFullYear()}</strong><button type="button" class="clean-nav" id="stdCalNext">›</button></div><div class="clean-weekdays"><b>Mon</b><b>Tue</b><b>Wed</b><b>Thu</b><b>Fri</b><b>Sat</b><b>Sun</b></div><div class="clean-cal-grid">${cells}</div></div>`);
+    $('stdCalPrev').onclick=()=>{current.setMonth(current.getMonth()-1);draw()};
+    $('stdCalNext').onclick=()=>{current.setMonth(current.getMonth()+1);draw()};
+    modal.querySelectorAll('.clean-cal-day').forEach(b=>b.onclick=()=>{
+      const newDate=parseFriendlyDate(b.dataset.date); const oldStart=fromDateTimeParts('startDate','startTime','08:00')||new Date(); const oldEnd=fromDateTimeParts('endDate','endTime','09:00')||new Date(oldStart.getTime()+3600000);
+      const startTime = dateISO(newDate)===dateISO(new Date()) ? currentTimeForDate(newDate) : (($('startTime')?.value)||'8:00 am');
+      $('startDate').value=dateISO(newDate); $('endDate').value=dateISO(newDate);
+      $('startTime').value=startTime;
+      const ns=fromDateTimeParts('startDate','startTime','08:00'); const oldDur=Math.max(30,(oldEnd-oldStart)/60000||60); const ne=new Date(ns.getTime()+oldDur*60000);
+      setDateTimeParts('end',ne); const dl=new Date(ns.getTime()-24*3600000); if(dl<new Date()) dl.setTime(Date.now()+2*3600000); setDateTimeParts('deadline',dl);
+      syncHiddenDateTimes(); renderPreview(); modal.classList.remove('open');
+    });
+  };
+  draw();
+}
+function timeSlots(){
+  const out=['12:01 am'];
+  for(let h=0;h<24;h++) for(const m of [30,0]){
+    if(h===0 && m===0) continue;
+    const d=new Date(); d.setHours(h,m,0,0);
+    const t=formatTime12(d);
+    if(!out.includes(t)) out.push(t);
+  }
+  out.push('11:59 pm');
+  return out;
+}
+function openStandardTimePicker(which){
+  const base=which==='end'?(fromDateTimeParts('endDate','endTime','09:00')||new Date()):(fromDateTimeParts('startDate','startTime','08:00')||new Date());
+  const date=fromDateTimeParts('startDate','startTime','08:00')||new Date();
+  const selected=(which==='end'?$('endTime')?.value:$('startTime')?.value)||formatTime12(base);
+  const slots=timeSlots().map(t=>`<button type="button" class="day-time-slot ${t===selected?'active':''}" data-time="${t}"><span>${t}</span></button>`).join('');
+  const modal=modalShell('standardTimeModal','time-only',`<div class="clean-time-card"><div class="time-head"><strong>${formatLongDayDate(date)}</strong><button type="button" class="clean-nav" id="stdTimeClose">×</button></div><div class="day-calendar-slots">${slots}</div></div>`);
+  $('stdTimeClose').onclick=()=>modal.classList.remove('open');
+  modal.querySelectorAll('.day-time-slot').forEach(b=>b.onclick=()=>{
+    if(which==='start'){
+      const oldS=fromDateTimeParts('startDate','startTime','08:00')||new Date(); const oldE=fromDateTimeParts('endDate','endTime','09:00')||new Date(oldS.getTime()+3600000);
+      const dur=Math.max(30,(oldE-oldS)/60000||60); $('startTime').value=b.dataset.time; const ns=fromDateTimeParts('startDate','startTime','08:00'); setDateTimeParts('end',new Date(ns.getTime()+dur*60000));
+    } else { $('endDate').value=$('startDate').value; $('endTime').value=b.dataset.time; }
+    syncHiddenDateTimes(); renderPreview(); modal.classList.remove('open');
+  });
+  const active=modal.querySelector('.day-time-slot.active'); if(active) active.scrollIntoView({block:'center'});
+}
+
 function initCreate(){
   mountTranslateBar('pollForm');
-  updateDurationControls(); smartTimes();
-  $('quickDate')?.addEventListener('change', e=>applyQuickDate(e.target.value));
-  ['standardDateBtn','standardStartBtn','standardEndBtn','openStandardCalendar'].forEach(id=>$(id)&&($(id).onclick=standardCalendarBridge));
-  applyQuickDate($('quickDate')?.value||'next30');
-  $('durationUnit')?.addEventListener('change',()=>{updateDurationControls(); const s=fromDateTimeParts('startDate','startTime','08:00')||nextHalfHour(); const e=new Date(s.getTime()+durationMinutes()*60000); setDateTimeParts('end',e); syncHiddenDateTimes(); renderPreview()});
-  $('durationSlider')?.addEventListener('input',()=>{updateDurationControls(); const s=fromDateTimeParts('startDate','startTime','08:00')||nextHalfHour(); const e=new Date(s.getTime()+durationMinutes()*60000); setDateTimeParts('end',e); syncHiddenDateTimes(); renderPreview()});
-  ['startDate','startTime','endDate','endTime','deadlineDate','deadlineTime'].forEach(id=>$(id)&&$(id).addEventListener('input',()=>{if(id==='startDate' && $('quickDate')) $('quickDate').value='custom'; if($('startDateWrap')) $('startDateWrap').hidden = $('quickDate')?.value !== 'custom'; syncHiddenDateTimes();renderPreview()}));
+  setupCleanStandardWhen();
+  ['startDate','startTime','endDate','endTime','deadlineDate','deadlineTime'].forEach(id=>$(id)&&$(id).addEventListener('input',()=>{syncHiddenDateTimes();renderPreview()}));
   resetOptionsForMode(); $('pollType')?.addEventListener('change', resetOptionsForMode);
+  const syncToggle=()=>{const v=$('rosterSyncType')?.value||'none'; if($('rosterWebhook')) $('rosterWebhook').style.display=['churchsuite','teamo','zapier_make'].includes(v)?'block':'none'}; $('rosterSyncType')?.addEventListener('change',syncToggle); syncToggle();
   document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',renderPreview));
   $('addOption').onclick=()=>{$('options').appendChild(isCalendarPoll()?calendarOptionRow():optionRow());renderPreview()}; $('previewBtn').onclick=renderPreview;
   $('translateBtn').onclick=()=>openTranslatePanel('pollForm');
@@ -335,10 +407,11 @@ async function initPoll(){
   function renderAdmin(){
     if(!data.is_admin)return;
     const deadlinePassed=p.deadline_at?new Date(p.deadline_at)<=new Date():false;
-    $('adminMount').innerHTML=`<section class="admin-panel"><h3>Administrator controls</h3><label class="toggle-line"><input id="adminResultsVisible" type="checkbox" ${p.results_visible?'checked':''}> Team can see poll results</label><p class="hint">Turn this off to hide names/results from everyone except administrators using this admin link.</p><label>Where do you want the roster to go?</label><select id="adminSyncType"><option value="excel">Excel / CSV only</option><option value="google_sheets">Google Sheets copy/import</option><option value="churchsuite">ChurchSuite adapter</option><option value="teamo">Teamo adapter</option><option value="zapier_make">Zapier / Make / custom webhook</option></select><label>Webhook / adapter URL</label><input id="adminWebhook" value="${esc(p.roster_webhook_url||'')}" placeholder="Only required for ChurchSuite, Teamo, Zapier or Make"><div class="dummy-sync-box"><b>Simple route:</b> use Excel / CSV or Google Sheets buttons above. <br><b>Automatic route:</b> paste a webhook URL from your ChurchSuite, Teamo, Zapier or Make adapter, then click Sync.</div><div class="actions"><button class="btn secondary" id="saveAdminSettings">Save access settings</button><button class="btn" id="syncRoster">Sync to roster planner</button><button class="btn secondary" id="downloadFinalIcs">Download final roster calendar</button><button class="btn secondary" id="emailFinalRoster">Email final roster to participants</button></div><p class="hint">Final roster sharing is intended after the voting deadline. Current status: ${deadlinePassed?'deadline passed':'deadline not passed yet'}. The calendar file contains the confirmed poll date/time rows so participants can update their calendars.</p></section>`;
+    $('adminMount').innerHTML=`<section class="admin-panel"><h3>Administrator controls</h3><label class="toggle-line"><input id="adminResultsVisible" type="checkbox" ${p.results_visible?'checked':''}> Team can see poll results</label><p class="hint">Turn this off to hide names/results from everyone except administrators using this admin link.</p><label>Where do you want the roster to go?</label><select id="adminSyncType"><option value="excel">Excel / CSV only</option><option value="google_sheets">Google Sheets copy/import</option><option value="churchsuite">ChurchSuite adapter</option><option value="teamo">Teamo adapter</option><option value="zapier_make">Zapier / Make / custom webhook</option></select><label>Webhook / adapter URL</label><input id="adminWebhook" value="${esc(p.roster_webhook_url||'')}" placeholder="Webhook / adapter URL"><div class="actions"><button class="btn secondary" id="saveAdminSettings">Save access settings</button><button class="btn" id="syncRoster">Sync to roster planner</button><button class="btn secondary" id="downloadFinalIcs">Download final roster calendar</button><button class="btn secondary" id="emailFinalRoster">Email final roster to participants</button></div><p class="hint">Final roster sharing is intended after the voting deadline. Current status: ${deadlinePassed?'deadline passed':'deadline not passed yet'}. The calendar file contains the confirmed poll date/time rows so participants can update their calendars.</p></section>`;
     if($('adminSyncType')) $('adminSyncType').value=p.roster_sync_type||'excel';
-    $('saveAdminSettings').onclick=async()=>{const rr=await fetch(api('update-poll-settings'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug,admin_token:admin,results_visible:$('adminResultsVisible').checked,roster_sync_type:$('adminSyncType')?.value||'excel',roster_sync_type:$('adminSyncType')?.value||'excel',roster_webhook_url:$('adminWebhook').value})});let jd={};try{jd=await rr.json()}catch(e){};if(!rr.ok){$('voteMsg').innerHTML='<div class="notice">Error: '+esc(jd.error||'Could not save settings')+'</div>';return}p=jd.poll;data.can_see_results=data.is_admin||p.results_visible;$('voteMsg').innerHTML='<div class="notice">✅ Admin settings saved.</div>';renderResults();renderAdmin();}
-    $('syncRoster').onclick=async()=>{const rr=await fetch(api('sync-roster'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug,admin_token:admin,roster_sync_type:$('adminSyncType')?.value||'excel',roster_sync_type:$('adminSyncType')?.value||'excel',roster_webhook_url:$('adminWebhook').value})});let jd={};try{jd=await rr.json()}catch(e){};$('voteMsg').innerHTML=rr.ok?'<div class="notice">✅ Synced '+jd.synced+' rows to roster adapter.</div>':'<div class="notice">Error: '+esc(jd.error||'Sync failed')+'</div>'}
+    const adminSyncToggle=()=>{const v=$('adminSyncType')?.value||'excel'; if($('adminWebhook')) $('adminWebhook').style.display=['churchsuite','teamo','zapier_make'].includes(v)?'block':'none'}; $('adminSyncType')?.addEventListener('change',adminSyncToggle); adminSyncToggle();
+    $('saveAdminSettings').onclick=async()=>{const rr=await fetch(api('update-poll-settings'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug,admin_token:admin,results_visible:$('adminResultsVisible').checked,roster_sync_type:$('adminSyncType')?.value||'excel',roster_webhook_url:$('adminWebhook').value})});let jd={};try{jd=await rr.json()}catch(e){};if(!rr.ok){$('voteMsg').innerHTML='<div class="notice">Error: '+esc(jd.error||'Could not save settings')+'</div>';return}p=jd.poll;data.can_see_results=data.is_admin||p.results_visible;$('voteMsg').innerHTML='<div class="notice">✅ Admin settings saved.</div>';renderResults();renderAdmin();}
+    $('syncRoster').onclick=async()=>{const rr=await fetch(api('sync-roster'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug,admin_token:admin,roster_sync_type:$('adminSyncType')?.value||'excel',roster_webhook_url:$('adminWebhook').value})});let jd={};try{jd=await rr.json()}catch(e){};$('voteMsg').innerHTML=rr.ok?'<div class="notice">✅ Synced '+jd.synced+' rows to roster adapter.</div>':'<div class="notice">Error: '+esc(jd.error||'Sync failed')+'</div>'}
   }
   renderResults();renderAdmin();
   $('voteNow').onclick=async()=>{const chosen=[...selected]; if(!chosen.length){alert(isCal?'Tick at least one date you can do.':'Choose an option first');return}const btn=$('voteNow'); btn.disabled=true; btn.textContent='Saving vote…';try{const rr=await fetch(api('cast-vote'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({slug,invite_token:invite,option_id:chosen[0],option_ids:chosen,voter_name:$('voterName').value,voter_email:$('voterEmail').value})});let jd={}; try{jd=await rr.json()}catch(e){}if(!rr.ok){$('voteMsg').innerHTML='<div class="notice">Error: '+(jd.error||'Vote could not be saved')+'</div>'; return;}$('voteMsg').innerHTML='<div class="notice">✅ Vote saved. Updating results…</div>';const fresh=await fetch(api('get-poll')+'?slug='+encodeURIComponent(slug)+'&invite='+encodeURIComponent(invite)+adminParam+'&t='+Date.now());if(fresh.ok){const latest=await fresh.json(); const latestTotal=latest.votes.reduce((a,v)=>a+Number(v.count),0); voteMap=Object.fromEntries(latest.votes.map(v=>[v.option_id,Number(v.count)])); resultRows=latest.result_rows||[];data.can_see_results=latest.can_see_results;draw(latestTotal,voteMap); renderCalendarLinks(); renderResults(); $('voteMsg').innerHTML='<div class="notice">✅ Vote saved. Add only your Yes dates to your calendar below.</div>';} else location.reload();}catch(e){$('voteMsg').innerHTML='<div class="notice">Error: '+e.message+'</div>'}finally{btn.disabled=false; btn.textContent='Update my vote';}}
