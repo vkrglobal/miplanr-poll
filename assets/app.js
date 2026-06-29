@@ -75,15 +75,21 @@ function updateDateSummary(){
 function updateStandardWhenRow(){
   if(!$('standardWhenRow')) return;
   const s=$('start')?.value?new Date($('start').value):fromDateTimeParts('startDate','startTime','08:00');
-  const e=$('end')?.value?new Date($('end').value):null;
-  if(s && !isNaN(s)){
-    $('standardDateBtn').innerHTML='<span class="pill-icon">📅</span><span class="pill-copy"><small>Select date</small><b>'+formatLongDayDate(s)+'</b></span>';
-    $('standardStartBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>Start time</small><b>'+formatTime12Compact(s)+'</b></span>';
+  const e=$('end')?.value?new Date($('end').value):fromDateTimeParts('endDate','endTime','09:00');
+  const hasStart=s && !isNaN(s);
+  const hasEnd=e && !isNaN(e);
+  if($('standardDateBtn')){
+    $('standardDateBtn').innerHTML='<span class="pill-icon">📅</span><span class="pill-copy"><small>Select date</small><b>'+(hasStart?formatFriendlyDate(s):'Choose date')+'</b><em>'+(hasStart?formatLongDayDate(s):'Not selected yet')+'</em></span>';
   }
-  if(e && !isNaN(e)) $('standardEndBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>End time</small><b>'+formatTime12Compact(e)+'</b></span>';
-  if($('whenSummaryBadge')){
-    $('whenSummaryBadge').textContent=(s && !isNaN(s)) ? (formatFriendlyDate(s)+' '+formatTime12Compact(s)+(e && !isNaN(e)?' - '+formatTime12Compact(e):'')) : 'Date/time';
+  if($('standardStartBtn')){
+    $('standardStartBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>Start time</small><b>'+(hasStart?formatTime12Compact(s):'Choose time')+'</b><em>'+(hasStart?'Starts '+formatTime12(s):'Not selected yet')+'</em></span>';
   }
+  if($('standardEndBtn')){
+    $('standardEndBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>End time</small><b>'+(hasEnd?formatTime12Compact(e):'Choose time')+'</b><em>'+(hasEnd?'Ends '+formatTime12(e):'Not selected yet')+'</em></span>';
+  }
+  const summary=hasStart ? (formatFriendlyDate(s)+' '+formatTime12Compact(s)+(hasEnd?' - '+formatTime12Compact(e):'')) : 'Date/time';
+  if($('whenSummaryBadge')) $('whenSummaryBadge').textContent=summary;
+  if($('whenSelectedLine')) $('whenSelectedLine').innerHTML=hasStart ? '<span>Selected:</span> <b>'+summary+'</b>' : 'Select a date and time to see it here.';
 }
 function standardCalendarBridge(){
   const s=$('start')?.value?new Date($('start').value):nextHalfHour();

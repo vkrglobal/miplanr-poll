@@ -107,9 +107,18 @@ body{top:0!important}
 @media(max-width:720px){.slick-when-card .standard-when-row{grid-template-columns:1fr}.calendar-option-card{grid-template-columns:46px 1fr 1fr!important}.calendar-option-card .cal-date-pill{grid-column:2/4}.calendar-option-card .calRemove{grid-column:1/4;width:100%!important}.calendar-option-card .cal-row-icon{grid-row:1/3}}
 
 
-/* v7.8.2 selected date/time badge beside When heading */
+/* v7.8.3 selected date/time badge beside When heading */
 .when-title-line{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap}
 .when-title-line h2{margin:0!important}
 .when-summary-badge{display:inline-flex;align-items:center;min-height:34px;padding:8px 14px;border-radius:10px;background:linear-gradient(90deg,var(--navy),#073c9d);color:#fff;font-size:14px;font-weight:900;letter-spacing:-.01em;box-shadow:0 10px 24px rgba(10,26,77,.18);white-space:nowrap}
 .slick-when-card .standard-start-pill .pill-icon,.slick-when-card .standard-end-pill .pill-icon{font-size:23px}
 @media(max-width:720px){.when-title-line{align-items:flex-start}.when-summary-badge{width:100%;justify-content:center}}
+
+
+/* v7.8.3: show selected date/time clearly in the When section and inside each box */
+.when-selected-line{margin:-6px 0 16px;padding:10px 14px;border-radius:12px;background:#f3f7ff;border:1px solid #dbe8ff;color:#53627f;font-size:14px;font-weight:800}
+.when-selected-line span{color:#53627f}.when-selected-line b{color:var(--navy);font-weight:900}
+.slick-when-card .pill-copy em{font-style:normal;font-size:12px;color:#53627f;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slick-when-card .cal-pill{min-height:78px}
+.slick-when-card .pill-copy{gap:3px}
+@media(max-width:720px){.when-selected-line{font-size:13px}.slick-when-card .cal-pill{min-height:72px}}
