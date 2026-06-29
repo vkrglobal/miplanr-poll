@@ -74,23 +74,33 @@ function updateDateSummary(){
 
 function updateStandardWhenRow(){
   if(!$('standardWhenRow')) return;
-  const s=$('start')?.value?new Date($('start').value):fromDateTimeParts('startDate','startTime','08:00');
-  const e=$('end')?.value?new Date($('end').value):fromDateTimeParts('endDate','endTime','09:00');
-  const hasStart=s && !isNaN(s);
-  const hasEnd=e && !isNaN(e);
+  const s = fromDateTimeParts('startDate','startTime','08:00') || ($('start')?.value ? new Date($('start').value) : null);
+  const e = fromDateTimeParts('endDate','endTime','09:00') || ($('end')?.value ? new Date($('end').value) : null);
+  const hasStart = !!(s && !isNaN(s));
+  const hasEnd = !!(e && !isNaN(e));
+  const dateText = hasStart ? formatFriendlyDate(s) : 'Choose date';
+  const dateSub = hasStart ? formatLongDayDate(s) : 'Not selected yet';
+  const startText = hasStart ? formatTime12Compact(s) : 'Choose time';
+  const startSub = hasStart ? 'Selected start time' : 'Not selected yet';
+  const endText = hasEnd ? formatTime12Compact(e) : 'Choose time';
+  const endSub = hasEnd ? 'Selected end time' : 'Not selected yet';
   if($('standardDateBtn')){
-    $('standardDateBtn').innerHTML='<span class="pill-icon">📅</span><span class="pill-copy"><small>Select date</small><b>'+(hasStart?formatFriendlyDate(s):'Choose date')+'</b><em>'+(hasStart?formatLongDayDate(s):'Not selected yet')+'</em></span>';
+    $('standardDateBtn').classList.toggle('has-selection', hasStart);
+    $('standardDateBtn').innerHTML='<span class="pill-icon">📅</span><span class="pill-copy"><small>Select date</small><b>'+dateText+'</b><em>'+dateSub+'</em></span>';
   }
   if($('standardStartBtn')){
-    $('standardStartBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>Start time</small><b>'+(hasStart?formatTime12Compact(s):'Choose time')+'</b><em>'+(hasStart?'Starts '+formatTime12(s):'Not selected yet')+'</em></span>';
+    $('standardStartBtn').classList.toggle('has-selection', hasStart);
+    $('standardStartBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>Start time</small><b>'+startText+'</b><em>'+startSub+'</em></span>';
   }
   if($('standardEndBtn')){
-    $('standardEndBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>End time</small><b>'+(hasEnd?formatTime12Compact(e):'Choose time')+'</b><em>'+(hasEnd?'Ends '+formatTime12(e):'Not selected yet')+'</em></span>';
+    $('standardEndBtn').classList.toggle('has-selection', hasEnd);
+    $('standardEndBtn').innerHTML='<span class="pill-icon">🕒</span><span class="pill-copy"><small>End time</small><b>'+endText+'</b><em>'+endSub+'</em></span>';
   }
   const summary=hasStart ? (formatFriendlyDate(s)+' '+formatTime12Compact(s)+(hasEnd?' - '+formatTime12Compact(e):'')) : 'Date/time';
   if($('whenSummaryBadge')) $('whenSummaryBadge').textContent=summary;
   if($('whenSelectedLine')) $('whenSelectedLine').innerHTML=hasStart ? '<span>Selected:</span> <b>'+summary+'</b>' : 'Select a date and time to see it here.';
 }
+
 function standardCalendarBridge(){
   const s=$('start')?.value?new Date($('start').value):nextHalfHour();
   const e=$('end')?.value?new Date($('end').value):new Date(s.getTime()+durationMinutes()*60000);
@@ -363,6 +373,7 @@ function setupCleanStandardWhen(){
   if($('standardDateBtn')) $('standardDateBtn').onclick=()=>openStandardDatePicker();
   if($('standardStartBtn')) $('standardStartBtn').onclick=()=>openStandardTimePicker('start');
   if($('standardEndBtn')) $('standardEndBtn').onclick=()=>openStandardTimePicker('end');
+  updateStandardWhenRow();
 }
 function modalShell(id, cls, inner){
   let m=$(id);
@@ -386,7 +397,7 @@ function openStandardDatePicker(){
       $('startTime').value=startTime;
       const ns=fromDateTimeParts('startDate','startTime','08:00'); const oldDur=Math.max(30,(oldEnd-oldStart)/60000||60); const ne=new Date(ns.getTime()+oldDur*60000);
       setDateTimeParts('end',ne); const dl=new Date(ns.getTime()-24*3600000); if(dl<new Date()) dl.setTime(Date.now()+2*3600000); setDateTimeParts('deadline',dl);
-      syncHiddenDateTimes(); renderPreview(); modal.classList.remove('open');
+      syncHiddenDateTimes(); updateStandardWhenRow(); renderPreview(); modal.classList.remove('open');
     });
   };
   draw();
@@ -411,7 +422,7 @@ function openStandardTimePicker(which){
       const oldS=fromDateTimeParts('startDate','startTime','08:00')||new Date(); const oldE=fromDateTimeParts('endDate','endTime','09:00')||new Date(oldS.getTime()+3600000);
       const dur=Math.max(30,(oldE-oldS)/60000||60); $('startTime').value=b.dataset.time; const ns=fromDateTimeParts('startDate','startTime','08:00'); setDateTimeParts('end',new Date(ns.getTime()+dur*60000));
     } else { $('endDate').value=$('startDate').value; $('endTime').value=b.dataset.time; }
-    syncHiddenDateTimes(); renderPreview(); modal.classList.remove('open');
+    syncHiddenDateTimes(); updateStandardWhenRow(); renderPreview(); modal.classList.remove('open');
   });
   const active=modal.querySelector('.day-time-slot.active'); if(active) active.scrollIntoView({block:'center'});
 }
@@ -419,7 +430,7 @@ function openStandardTimePicker(which){
 function initCreate(){
   mountTranslateBar('pollForm');
   setupCleanStandardWhen();
-  ['startDate','startTime','endDate','endTime','deadlineDate','deadlineTime'].forEach(id=>$(id)&&$(id).addEventListener('input',()=>{syncHiddenDateTimes();renderPreview()}));
+  ['startDate','startTime','endDate','endTime','deadlineDate','deadlineTime'].forEach(id=>$(id)&&$(id).addEventListener('input',()=>{syncHiddenDateTimes();updateStandardWhenRow();renderPreview()}));
   resetOptionsForMode(); $('pollType')?.addEventListener('change', resetOptionsForMode); $('calendarIconTheme')?.addEventListener('change', refreshCalendarOptionIcons);
   const syncToggle=()=>{const v=$('rosterSyncType')?.value||'none'; if($('rosterWebhook')) $('rosterWebhook').style.display=['churchsuite','teamo','zapier_make'].includes(v)?'block':'none'}; $('rosterSyncType')?.addEventListener('change',syncToggle); syncToggle();
   document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',renderPreview));

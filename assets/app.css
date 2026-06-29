@@ -122,3 +122,10 @@ body{top:0!important}
 .slick-when-card .cal-pill{min-height:78px}
 .slick-when-card .pill-copy{gap:3px}
 @media(max-width:720px){.when-selected-line{font-size:13px}.slick-when-card .cal-pill{min-height:72px}}
+
+
+/* v7.8.4: selected date/time is visible immediately inside each When box */
+.slick-when-card .cal-pill.has-selection{border-color:#bcd4ff;background:linear-gradient(180deg,#ffffff,#f2f7ff)}
+.slick-when-card .cal-pill.has-selection .pill-copy b{font-size:18px;color:var(--navy);font-weight:950}
+.slick-when-card .cal-pill.has-selection .pill-copy small{color:#53627f}
+.slick-when-card .cal-pill.has-selection .pill-copy em{color:#263a66}
