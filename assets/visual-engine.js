@@ -69,11 +69,23 @@ window.miPlanrVisual = (() => {
     "mocktail":"🍹","virgin mojito":"🍹","fruit punch":"🍹","pimms":"🍹","pimm's":"🍹","aperol spritz":"🍹","spritz":"🍹","martini":"🍸","negroni":"🍸","old fashioned":"🥃","espresso martini":"🍸","piña colada":"🍹","pina colada":"🍹","bloody mary":"🍹","sangria":"🍷","mulled wine":"🍷",
     "ale":"🍺","ipa":"🍺","stout":"🍺","guinness":"🍺","shandy":"🍺","non alcoholic beer":"🍺","alcohol free beer":"🍺","rose wine":"🍷","rosé":"🍷","red wine":"🍷","white wine":"🍷","sparkling wine":"🍾","cava":"🍾","tequila":"🥃","brandy":"🥃","cognac":"🥃","baileys":"🥃","sake":"🍶","soju":"🍶"
   });
+  const FAITH_MAP = {
+    "jesus":"✝️", "christ":"✝️", "god":"✨", "holy spirit":"🕊️", "spirit":"🕊️", "bible":"📖", "scripture":"📖", "word":"📖", "prayer":"🙏", "pray":"🙏", "praying":"🙏", "church":"⛪", "service":"⛪", "sunday service":"⛪", "praise":"🎵", "worship":"🎶", "worship night":"🎶", "connect group":"🤝", "connect groups":"🤝", "life group":"🤝", "small group":"🤝", "fellowship":"🤝", "love":"❤️", "grace":"❤️", "hope":"✨", "faith":"✝️", "cross":"✝️", "communion":"🍞", "baptism":"💧", "baptise":"💧", "candle":"🕯️", "mission":"🌍", "outreach":"🌍", "shepherd":"🐑", "christmas":"⭐", "easter":"🌅", "palm sunday":"🌿", "holy week":"✝️"
+  };
+  const EXERCISE_MAP = {
+    "exercise":"💪", "fitness":"💪", "workout":"💪", "gym":"🏋️", "weights":"🏋️", "strength":"🏋️", "training":"⏱️", "run":"🏃", "running":"🏃", "walk":"🚶", "walking":"🚶", "cycle":"🚴", "cycling":"🚴", "bike":"🚴", "swim":"🏊", "swimming":"🏊", "yoga":"🧘", "pilates":"🧘", "stretch":"🤸", "stretching":"🤸", "mobility":"🤸", "hiit":"🔥", "cardio":"❤️", "hike":"🥾", "hiking":"🥾", "recovery":"🌿", "warm up":"🔥", "cool down":"🌿"
+  };
+  const REST_MAP = {
+    "sleep":"😴", "rest":"☁️", "nap":"💤", "bed":"🛏️", "bedtime":"🛏️", "night":"🌙", "relax":"🛁", "relaxing":"🛁", "quiet time":"🕯️", "read":"📚", "reading":"📚", "meditation":"🎧", "mindfulness":"🧘", "recovery":"🌿", "wellbeing":"🌿", "wellness":"🌿", "mental health":"🧠", "calm":"😌", "self care":"💖", "kindness":"🤗", "flourish":"🌻", "hydration":"💧", "healthy":"🍎"
+  };
   const AIRLINE_MAP = {"british airways": "✈️", "easyjet": "✈️", "ryanair": "✈️", "virgin atlantic": "✈️", "emirates": "✈️", "qatar airways": "✈️", "etihad": "✈️", "turkish airlines": "✈️", "lufthansa": "✈️", "air france": "✈️", "klm": "✈️", "delta": "✈️", "united airlines": "✈️", "american airlines": "✈️", "southwest": "✈️", "jetblue": "✈️", "singapore airlines": "✈️", "cathay pacific": "✈️", "qantas": "✈️", "air new zealand": "✈️", "ana": "✈️", "japan airlines": "✈️", "thai airways": "✈️", "malaysia airlines": "✈️", "saudia": "✈️", "wizz air": "✈️", "tui": "✈️", "norwegian": "✈️", "iberia": "✈️", "aer lingus": "✈️", "finnair": "✈️", "swiss": "✈️", "austrian airlines": "✈️", "tap air portugal": "✈️", "air canada": "✈️", "westjet": "✈️", "latam": "✈️", "avianca": "✈️", "ethiopian airlines": "✈️", "kenya airways": "✈️", "egyptair": "✈️", "royal air maroc": "✈️", "sas": "✈️", "brussels airlines": "✈️", "vueling": "✈️", "pegasus": "✈️", "air india": "✈️", "indigo": "✈️", "spicejet": "✈️", "cebu pacific": "✈️"};
   const BRAND_MAP = {"apple": "", "google": "G", "microsoft": "⊞", "amazon": "🛒", "meta": "∞", "facebook": "f", "instagram": "◎", "whatsapp": "💬", "x": "𝕏", "twitter": "𝕏", "linkedin": "in", "youtube": "▶", "netflix": "N", "spotify": "♬", "tesla": "T", "bmw": "🚘", "mercedes": "🚘", "audi": "🚘", "volkswagen": "🚘", "toyota": "🚘", "honda": "🚘", "ford": "🚘", "nike": "✓", "adidas": "▲", "puma": "🐆", "under armour": "🏷️", "samsung": "S", "sony": "S", "lg": "🏷️", "panasonic": "🏷️", "hp": "HP", "dell": "D", "lenovo": "L", "salesforce": "☁", "hubspot": "🔶", "slack": "#", "zoom": "🎥", "teams": "👥", "notion": "N", "todoist": "✓", "garmin": "⌚", "strava": "🚴", "uber": "🚕", "bolt": "⚡", "airbnb": "🏠", "booking.com": "🏷️", "expedia": "🏷️", "paypal": "P", "stripe": "S"};
   const GENERIC = [
     ['holiday|travel|trip|flight|airport|hotel','✈️'], ['beach|sea|coast|island','🏖️'], ['park|forest|garden','🌳'],
-    ['church|prayer|worship','⛪'], ['school|class|lesson|university|study','🎓'], ['work|office|meeting|business','👥'],
+    ['jesus|christ|god|holy spirit|bible|scripture|church|prayer|pray|praise|worship|connect group|fellowship|faith','✝️'],
+    ['exercise|fitness|workout|gym|running|cycling|swimming|yoga|pilates|stretch|training','💪'],
+    ['sleep|rest|nap|bedtime|relax|wellbeing|wellness|mindfulness|recovery','😴'],
+    ['school|class|lesson|university|study','🎓'], ['work|office|meeting|business','👥'],
     ['birthday|party|celebration','🎉'], ['wedding|engagement','💍'], ['health|doctor|medical|hospital','🏥'],
     ['music|concert|band','🎵'], ['movie|cinema|film','🎬'], ['shopping|shop|store','🛍️'], ['money|finance|bank|budget','💷'],
     ['home|house|family','🏡'], ['car|drive|road','🚗'], ['train|rail','🚆'], ['boat|ferry','⛴️'], ['online|zoom|teams|virtual','💻']
@@ -98,7 +110,10 @@ window.miPlanrVisual = (() => {
     if(/^[a-z]{2}$/.test(t) && validCodes.has(t.toUpperCase())) return { icon: flagEmoji(t.toUpperCase()), type:'country', label:t.toUpperCase() };
     const country = findExactOrContains(COUNTRY_MAP, t);
     if(country) return { icon: flagEmoji(country), type:'country', label:country };
-    let icon = findExactOrContains(BRAND_MAP, t); if(icon) return {icon, type:'brand'};
+    let icon = findExactOrContains(FAITH_MAP, combined); if(icon) return {icon, type:'faith'};
+    icon = findExactOrContains(EXERCISE_MAP, combined); if(icon) return {icon, type:'exercise'};
+    icon = findExactOrContains(REST_MAP, combined); if(icon) return {icon, type:'rest'};
+    icon = findExactOrContains(BRAND_MAP, t); if(icon) return {icon, type:'brand'};
     icon = findExactOrContains(AIRLINE_MAP, t); if(icon) return {icon, type:'airline'};
     icon = findExactOrContains(EXTENDED_SPORT_MAP, t); if(icon) return {icon, type:'sport'};
     icon = findExactOrContains(SPORT_MAP, combined); if(icon) return {icon, type:'sport'};
