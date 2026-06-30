@@ -179,3 +179,7 @@ update public.polls set admin_token = encode(gen_random_bytes(12), 'hex') where 
 
 -- v7.7 roster sync type persistence
 alter table public.polls add column if not exists roster_sync_type text default 'none';
+
+-- v8.0.3 poll consolidation: same title/question/options write to the same poll record
+alter table public.polls add column if not exists poll_group_key text;
+create index if not exists idx_polls_group_key on public.polls(poll_group_key);

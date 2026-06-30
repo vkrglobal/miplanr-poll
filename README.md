@@ -1,14 +1,11 @@
-# miPlanr Poll v7.1
+# miPlanr Poll v8.0.3
 
-- Translation is now one of the first controls on the poll page.
-- Translate applies to the whole poll page: headers, buttons, question, answers and visible poll text.
-- Uses the free Google Translate widget with a direct Google Translate fallback.
-- Keeps v7.0 food/drink/sports icon expansion and prior calendar/voting fixes.
+Updates in this release:
 
+- Poll consolidation: if a new poll has the same title, question, poll type and options/date-times as an existing poll, miPlanr reuses the existing poll record so all responses appear in the same results database.
+- Calendar quorum clarification: quorum is counted per date/time option. One person selecting two dates creates one availability vote on each selected date, not two votes towards the same date.
+- Admin-controlled results visibility remains in place: team results are shown only when the administrator allows it.
+- Share message remains editable and auto-suggested from the title/question.
 
-## v7.3 calendar polling fixes
-- Calendar polling hides the normal overall event date/time section.
-- Date options now include date, start time and duration.
-- Added an Open calendar selector with month, week and day views.
-- Fixed Add option for calendar polls.
-- Prevented Enter in location/input fields from accidentally submitting/resetting the form.
+Important database step:
+Run `supabase/schema.sql` in Supabase SQL Editor after deploying this release so the new `poll_group_key` column/index exists.

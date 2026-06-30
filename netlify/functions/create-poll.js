@@ -3,24 +3,48 @@ const crypto = require('crypto');
 const slug=()=>crypto.randomBytes(5).toString('hex');
 const token=()=>crypto.randomBytes(12).toString('hex');
 const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const normalise=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
+function pollGroupKey(body){
+  const parts=[normalise(body.title),normalise(body.question),normalise(body.poll_type||'standard')];
+  const opts=(body.options||[]).map((o,i)=>{
+    const co=(body.calendar_options&&body.calendar_options[i])||{};
+    return [normalise(o),co.start_at||'',co.end_at||''].join('|');
+  });
+  return crypto.createHash('sha256').update(parts.concat(opts).join('||')).digest('hex');
+}
 
 exports.handler=async(event)=>{
   try{
     const body=JSON.parse(event.body||'{}');
     const sb=client();
-    const poll={
-      slug:slug(),title:body.title,question:body.question,description:body.description||'',creator:body.creator||'',creator_name:body.creator||'',
-      location:body.location||'',address_line1:body.address_line1||'',city:body.city||'',postcode:body.postcode||'',place_label:body.place_label||body.location||'',
-      place_lat:body.place_lat||null,place_lon:body.place_lon||null,maps_url:body.maps_url||'',
-      start_at:body.start_at||null,end_at:body.end_at||null,deadline_at:body.deadline_at||null,
-      threshold:body.threshold||3,poll_type:body.poll_type||'standard',allow_vote_edit:true,notify_on_quorum:true,
-      admin_token: token(), results_visible: body.results_visible !== false, roster_sync_type: body.roster_sync_type || 'none', roster_webhook_url: body.roster_webhook_url || ''
-    };
-    const {data:p,error:e}=await sb.from('polls').insert(poll).select('*').single();
-    if(e)throw e;
-
-    const options=(body.options||[]).map((o,i)=>{const co=(body.calendar_options&&body.calendar_options[i])||{};return {poll_id:p.id,option_text:o,label:o,icon:(body.option_icons&&body.option_icons[i])||'✨',sort_order:i,start_at:co.start_at||null,end_at:co.end_at||null}});
-    if(options.length){const {error:oe}=await sb.from('poll_options').insert(options);if(oe)throw oe;}
+    const group_key = pollGroupKey(body);
+    let reused=false;
+    let p=null;
+    const {data:existing,error:lookupError}=await sb.from('polls').select('*').eq('poll_group_key',group_key).order('created_at',{ascending:true}).limit(1).maybeSingle();
+    if(lookupError && !String(lookupError.message||'').includes('poll_group_key')) throw lookupError;
+    if(existing){
+      p=existing;
+      reused=true;
+      const patch={updated_at:new Date().toISOString()};
+      if(body.results_visible===false) patch.results_visible=false;
+      if(body.roster_sync_type) patch.roster_sync_type=body.roster_sync_type;
+      if(body.roster_webhook_url) patch.roster_webhook_url=body.roster_webhook_url;
+      await sb.from('polls').update(patch).eq('id',p.id);
+    } else {
+      const poll={
+        slug:slug(),poll_group_key:group_key,title:body.title,question:body.question,description:body.description||'',creator:body.creator||'',creator_name:body.creator||'',
+        location:body.location||'',address_line1:body.address_line1||'',city:body.city||'',postcode:body.postcode||'',place_label:body.place_label||body.location||'',
+        place_lat:body.place_lat||null,place_lon:body.place_lon||null,maps_url:body.maps_url||'',
+        start_at:body.start_at||null,end_at:body.end_at||null,deadline_at:body.deadline_at||null,
+        threshold:body.threshold||3,poll_type:body.poll_type||'standard',allow_vote_edit:true,notify_on_quorum:true,
+        admin_token: token(), results_visible: body.results_visible !== false, roster_sync_type: body.roster_sync_type || 'none', roster_webhook_url: body.roster_webhook_url || ''
+      };
+      const {data:created,error:e}=await sb.from('polls').insert(poll).select('*').single();
+      if(e)throw e;
+      p=created;
+      const options=(body.options||[]).map((o,i)=>{const co=(body.calendar_options&&body.calendar_options[i])||{};return {poll_id:p.id,option_text:o,label:o,icon:(body.option_icons&&body.option_icons[i])||'✨',sort_order:i,start_at:co.start_at||null,end_at:co.end_at||null}});
+      if(options.length){const {error:oe}=await sb.from('poll_options').insert(options);if(oe)throw oe;}
+    }
 
     const emails=[...new Set((body.emails||[]).filter(Boolean).map(x=>String(x).trim().toLowerCase()))];
     const participants=emails.map(email=>({poll_id:p.id,email,invite_token:token()}));
@@ -33,7 +57,7 @@ exports.handler=async(event)=>{
     const invite_status=await sendInvites(p,inviteRows);
     const origin=(process.env.URL||process.env.SITE_URL||'https://miplanr.com').replace(/\/$/,'');
     const invite_links=inviteRows.map(part=>({email:part.email,link:`${origin}/poll.html?slug=${encodeURIComponent(p.slug)}&invite=${encodeURIComponent(part.invite_token)}`}));
-    return {statusCode:200,body:JSON.stringify({slug:p.slug,id:p.id,admin_token:p.admin_token,invite_status,invite_links})}
+    return {statusCode:200,body:JSON.stringify({slug:p.slug,id:p.id,admin_token:p.admin_token,reused_poll:reused,consolidated:true,invite_status,invite_links})}
   }catch(err){return {statusCode:500,body:JSON.stringify({error:err.message})}}
 }
 

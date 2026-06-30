@@ -129,3 +129,8 @@ body{top:0!important}
 .slick-when-card .cal-pill.has-selection .pill-copy b{font-size:18px;color:var(--navy);font-weight:950}
 .slick-when-card .cal-pill.has-selection .pill-copy small{color:#53627f}
 .slick-when-card .cal-pill.has-selection .pill-copy em{color:#263a66}
+
+/* v8.0.2 editable sharing message */
+.share-message-label{display:block;margin-top:14px;font-weight:800;color:#071f5f}
+.share-message-box{width:100%;min-height:92px;resize:vertical;border:1px solid #cfe0ff;border-radius:16px;padding:14px 16px;font:inherit;font-weight:650;color:#071f5f;background:#f8fbff;box-shadow:inset 0 1px 0 rgba(255,255,255,.75)}
+.share-message-box:focus{outline:none;border-color:#1f6fff;box-shadow:0 0 0 4px rgba(31,111,255,.12)}
