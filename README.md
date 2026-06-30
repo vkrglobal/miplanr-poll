@@ -9,3 +9,9 @@ Updates in this release:
 
 Important database step:
 Run `supabase/schema.sql` in Supabase SQL Editor after deploying this release so the new `poll_group_key` column/index exists.
+
+## v8.0.4 consolidated poll expiry
+- Polls shared through email, WhatsApp, copied links or other miPlanr share options consolidate into the same poll when the title, question, poll type and option/date-time set match.
+- The share channel does not create a separate response database.
+- Poll expiry is optional for creators. If blank, the app defaults the expiry to the start of the first date/time option.
+- After expiry, the vote endpoint rejects late votes.

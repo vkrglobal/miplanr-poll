@@ -27,6 +27,7 @@ exports.handler=async(event)=>{
       reused=true;
       const patch={updated_at:new Date().toISOString()};
       if(body.results_visible===false) patch.results_visible=false;
+      if(body.deadline_at) patch.deadline_at=body.deadline_at;
       if(body.roster_sync_type) patch.roster_sync_type=body.roster_sync_type;
       if(body.roster_webhook_url) patch.roster_webhook_url=body.roster_webhook_url;
       await sb.from('polls').update(patch).eq('id',p.id);

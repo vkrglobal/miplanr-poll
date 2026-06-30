@@ -36,6 +36,17 @@ function parseTime12(v, fallback='08:00'){
 }
 function toLocalInput(d){return dateISO(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())}
 function toOffsetDateTime(d){const off=-d.getTimezoneOffset();const sign=off>=0?'+':'-';const ah=Math.floor(Math.abs(off)/60),am=Math.abs(off)%60;return dateISO(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00'+sign+pad(ah)+':'+pad(am)}
+function fromLocalDateTimeInput(v){if(!v)return null; const d=new Date(v); return isNaN(d)?null:d;}
+function earliestPollStart(calendarOptions){
+  const dates=(calendarOptions||[]).map(o=>o&&o.start_at?new Date(o.start_at):null).filter(d=>d&&!isNaN(d));
+  if(dates.length) return new Date(Math.min(...dates.map(d=>d.getTime())));
+  return fromDateTimeParts('startDate','startTime','08:00') || ($('start')?.value?new Date($('start').value):nextHalfHour());
+}
+function pollExpiryIso(calendarOptions){
+  const manual=fromLocalDateTimeInput($('pollExpiry')?.value||'');
+  const d=manual || earliestPollStart(calendarOptions);
+  return toOffsetDateTime(d);
+}
 function calendarLocalStamp(d){return dateISO(d).replace(/-/g,'')+'T'+pad(d.getHours())+pad(d.getMinutes())+'00'}
 function localIsoNoZone(d){return dateISO(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00'}
 function setDateTimeParts(prefix,d){if($(prefix+'Date')){$(prefix+'Date').value=$(prefix+'Date').type==='date'?dateISO(d):formatFriendlyDate(d)}if($(prefix+'Time'))$(prefix+'Time').value=formatTime12(d)}
@@ -438,6 +449,7 @@ function initCreate(){
   resetOptionsForMode(); $('pollType')?.addEventListener('change', resetOptionsForMode); $('calendarIconTheme')?.addEventListener('change', refreshCalendarOptionIcons);
   const syncToggle=()=>{const v=$('rosterSyncType')?.value||'none'; if($('rosterWebhook')) $('rosterWebhook').style.display=['churchsuite','teamo','zapier_make'].includes(v)?'block':'none'}; $('rosterSyncType')?.addEventListener('change',syncToggle); syncToggle();
   document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',renderPreview));
+  $('pollExpiry')?.addEventListener('input',()=>{ const d=fromLocalDateTimeInput($('pollExpiry').value); if(d) setDateTimeParts('deadline', d); syncHiddenDateTimes(); renderPreview(); });
   $('addOption').onclick=()=>{$('options').appendChild(isCalendarPoll()?calendarOptionRow():optionRow());refreshCalendarOptionIcons();renderPreview()}; $('previewBtn').onclick=renderPreview;
   $('translateBtn').onclick=()=>openTranslatePanel('pollForm');
   $('pollForm')?.addEventListener('keydown',e=>{if(e.key==='Enter' && e.target && e.target.tagName==='INPUT'){e.preventDefault();}});
@@ -446,7 +458,7 @@ function initCreate(){
   $('pollForm').onsubmit=async ev=>{
     ev.preventDefault(); syncHiddenDateTimes(); const btn=ev.submitter||document.querySelector('button[type=submit]'); btn.disabled=true;
     try{const calendarOptions=isCalendarPoll()?getCalendarOptions():[]; const options=isCalendarPoll()?calendarOptions.map(o=>o.label):[...document.querySelectorAll('.opt')].map(i=>i.value.trim()).filter(Boolean);if(options.length<2){alert('Please add at least two options.');return}
-      const enrichedOpts=miPlanrVisual.enrichOptions(options,$('question').value);const payload={poll_type:isCalendarPoll()?'calendar':'standard',title:$('title').value,question:$('question').value,description:$('description').value,location:$('location').value,place_label:$('location').value,place_lat:$('location').dataset.lat||null,place_lon:$('location').dataset.lon||null,maps_url:($('location').dataset.lat&&$('location').dataset.lon)?('https://www.openstreetmap.org/?mlat='+$('location').dataset.lat+'&mlon='+$('location').dataset.lon+'#map=16/'+$('location').dataset.lat+'/'+$('location').dataset.lon):'',creator:$('creator').value||'miPlanr creator',start_at:$('start').value,end_at:$('end').value,deadline_at:$('deadline').value,threshold:Number($('threshold').value||3),results_visible:$('resultsVisible')?$('resultsVisible').checked:true,roster_sync_type:$('rosterSyncType')?.value||'none',roster_webhook_url:$('rosterWebhook')?.value||'',options,calendar_options:calendarOptions,option_icons:isCalendarPoll()?options.map((x,i)=>calendarIconForIndex(i)):enrichedOpts.map(x=>x.icon),emails:parseEmails($('emails').value)};
+      const enrichedOpts=miPlanrVisual.enrichOptions(options,$('question').value);const payload={poll_type:isCalendarPoll()?'calendar':'standard',title:$('title').value,question:$('question').value,description:$('description').value,location:$('location').value,place_label:$('location').value,place_lat:$('location').dataset.lat||null,place_lon:$('location').dataset.lon||null,maps_url:($('location').dataset.lat&&$('location').dataset.lon)?('https://www.openstreetmap.org/?mlat='+$('location').dataset.lat+'&mlon='+$('location').dataset.lon+'#map=16/'+$('location').dataset.lat+'/'+$('location').dataset.lon):'',creator:$('creator').value||'miPlanr creator',start_at:$('start').value,end_at:$('end').value,deadline_at:pollExpiryIso(calendarOptions),threshold:Number($('threshold').value||3),results_visible:$('resultsVisible')?$('resultsVisible').checked:true,roster_sync_type:$('rosterSyncType')?.value||'none',roster_webhook_url:$('rosterWebhook')?.value||'',options,calendar_options:calendarOptions,option_icons:isCalendarPoll()?options.map((x,i)=>calendarIconForIndex(i)):enrichedOpts.map(x=>x.icon),emails:parseEmails($('emails').value)};
       $('createMsg').innerHTML='<div class="notice">Creating your smart poll…</div>';const res=await fetch(api('create-poll'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});let data={}; try{data=await res.json()}catch(e){} if(!res.ok){$('createMsg').innerHTML='<div class="notice">Error: '+(data.error||'Could not create poll')+'</div>';return}
       const link=location.origin+'/poll.html?slug='+encodeURIComponent(data.slug);const adminLink=link+'&admin='+encodeURIComponent(data.admin_token||'');
       $('shareLink').value=link;
